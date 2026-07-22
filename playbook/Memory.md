@@ -6,7 +6,7 @@
 
 ## 📍 Current status
 - **Phase:** **Phases 3, 4, 5 COMPLETE** ✅ + **5 UX/safety fixes** from the user's live testing (see Session 6). Only **Phase 6 (docs/README + submission)** remains — after the user's design pass.
-- **Currently working on:** **PUSHED** — user authorized the push (2026-07-22). `main` → `origin/main` (19 commits: P3+P4+P5+Session-6 fixes) + all 4 feature branches. `main` now in sync with origin (0 ahead). Vercel auto-deploy triggered. **Next: the design/interactive pass** (user's call), then Phase 6.
+- **Currently working on:** **Design pass on `feat/dashboard-shell` — shell built (Session 7b) + feedback round 1 done (Session 8).** App shell (Sidebar-only over an `(app)` route group; topbar removed), pastel **Dashboard** (stat cards, sage Calories chart, Report donut, Meal-for-today, guardrail-screened **snack recs**, safety strip), **day-tabs Meal Plans** (`WeekView`), light **Security Console** (humanized event cards), Profile. Accent: **sage = active nav + primary buttons, coral = safety/blocked**. `npm run build` green; **verified live on the user's cybergen account**. NOT pushed yet. **Next: taste preferences** (`profiles` migration + form + prompt) → push on user's go → Phase 6.
 - **Currently-edited file:** none.
 - **Live URLs:** **https://aegis-zeta-six.vercel.app** — now deploying the FULL app (P3 guardrail + P4 dashboard/charts + USD + Session-6 fixes). Generation needs `GROQ_API_KEY` in Vercel (user says it's set). Confirm the Vercel build went green + spot-check live before relying on it.
 - **Blockers:** none.
@@ -28,6 +28,7 @@
 | D8 | **No real payments/bank integrations; not a medical device** | Out of scope + safety. |
 | D9 | **Git workflow: commit every change (explained), branch-per-feature (`feat/*`), ask before every push** | Visible AI-first process + `main` stays deployable. Pinned in [Rules.md §6](Rules.md#6-git-workflow-branch-per-feature--commit-everything--ask-before-push) + CLAUDE.md. |
 | D10 | **All-Vercel is primary: AI generation + deterministic guardrail run in a Next.js server Route Handler. FastAPI/Render demoted to a post-core stretch (a live "evidence" endpoint only).** | (1) One platform → clean ship, no free-tier cold-start in front of the evaluator. (2) The route runs under the user's Supabase session → **RLS enforced automatically** (stronger security story for a safety app). (3) Same guardrail behavior, TypeScript instead of Python — the eval tests the *real* shipped code. FastAPI stays in `/backend` as documented architecture; deploy to Render only after the core ships. |
+| D11 | **Design pivot → "Daily Meal"-style dashboard app shell.** Adopt a **pastel** scheme (lavender/mint/pink/peach cards, dark sidebar) **with a hint of Aegis sage/coral** as accent. Landing = **dashboard** (5 stat cards incl. **≥2 safety/budget**, calories line chart, nutrition report donut, "meal for today", **snack recommendations** — snacks pass the same `screenMeal` guardrail). Left-sidebar IA: **Dashboard · Meal Plans · Security Console · Profile**. Add **taste preferences** (cuisines / include / dislike) to Profile + onboarding, fed to the prompt as *data* (**best-effort — only declared allergens are safety-enforced by the guardrail; dislikes are not a safety guarantee**). | User-directed design pass (Session 7). Reorganizes existing pages into one shell; keeps **safety front-and-center** (dedicated Security Console + safety stat cards) per "trust & safety is the product". Extends D6 — that sage/coral/off-white palette becomes the *accent* on top of the pastel base. |
 
 ---
 
@@ -50,7 +51,7 @@
 - Merge `feat/phase-5-eval` → `main` (P3/P4 already merged). **Push remains ON HOLD** per user (design/interactive changes coming first).
 
 ## ⏭️ Next up
-1. **User's design/color + interactive changes** (their next work) — do these BEFORE pushing.
+1. **Design pass (D11) — dashboard app shell.** (a) confirm final 5 stat-card set + pastel/accent hex with user; (b) build the shell + sidebar nav (Dashboard · Meal Plans · Security Console · Profile) on `feat/dashboard-shell`; (c) wire **taste preferences** into onboarding/Profile + the prompt (as data); (d) add **snack recommendations** (must pass `screenMeal`). Verify live, then push on user's go.
 2. **Phase 6 — docs & submission:** `README.md` (decides-then-builds + stack/data-model + locked-decisions table + "what I'd do next" + live link + the eval number + "built with Claude Code"), finalize Documentary/Prompt/Memory, final deploy check from a fresh browser, email submission (Full Name · Aegis · Live URL · GitHub · 2–3 line description).
 3. When user says go: push `main` → Vercel auto-deploys → verify P3/P4/P5 live in prod (user says `GROQ_API_KEY` is in Vercel now).
 - **Stretch (only if ahead):** deploy `/backend` FastAPI to Render as a live evidence endpoint; single-meal regenerate button; RAG.
@@ -154,3 +155,48 @@
 - **Errors & fixes:** browser-pane clicks unreliable again → used `form_input` + endpoint `fetch` + JS state reads for verification. A compound here-string mis-parsed and merged two commits → `git reset --soft` and recommitted via `-F` message files (4 clean commits: 7e2c7bc auth, c9be1b4 required, bd69669 metrics, 45746a6 free-of).
 - **Outputs & logs:** `npm run build` green; `npm run test:guardrail` **18/18**; `npm run eval` still **100% / 100%**. Live: new plan `62739979…` shows coherent metrics + one-line block log + consistent safe plate.
 - **Next:** merge `fix/ux-and-safety-log` → main (local). Hold push. User does design/interactive pass → Phase 6 → push on their go.
+
+### 2026-07-22 — Session 7: design direction locked (dashboard shell + IA)
+- **Attempted:** user shared a "Daily Meal" dashboard reference (crossed out heart/water/exercise trackers, Message, an extra nav item) and asked (a) is it fully buildable on our stack, and (b) laid out the app vision.
+- **Result:** confirmed **100% buildable on the current stack** — Next.js + Tailwind + shadcn/ui + recharts, **no new libraries**. Locked the design direction as **D11**: pastel palette + Aegis sage/coral *accent*; landing = dashboard; sidebar IA = **Dashboard · Meal Plans · Security Console · Profile**; **snack recommendations** (guardrail-screened) replace the meal-recs panel; **taste preferences** added to Profile + onboarding.
+- **Safety guardrails kept central:** ≥2 of the 5 stat cards are safety/budget; **Security Console** is its own destination; recommended snacks MUST pass the same `screenMeal` guardrail; taste "dislikes" are best-effort prompt hints, **not** a safety guarantee (only declared allergens are enforced).
+- **Logging question answered (user asked):** _build process_ is logged in **Memory.md** (this session log), **Prompt.md** (build prompts → output → problems → fix), **Documentary.md** (phase-boundary narrative), and the **git commit history**; _app runtime_ is logged in the **`safety_events`** table (every guardrail decision: meal_passed / meal_blocked / injection_detected) plus plans/meals/ingredients persisted under **RLS**.
+- **Next:** confirm final stat-card set + palette hex, then build the shell + views on `feat/dashboard-shell`; wire taste prefs + snack recs; verify live; push on user's go; then Phase 6.
+
+### 2026-07-22 — Session 7b: dashboard shell + pastel redesign BUILT
+- **Attempted:** build the D11 dashboard app shell. User answered the two open questions: (1) drop the "meals safe" stat card in favor of prominence for Meal-for-today + the charts; (2) "keep your default" accent (sage = active nav + primary buttons, coral = safety/blocked).
+- **Result:** built on `feat/dashboard-shell`, `npm run build` **green** (all routes compile, TS passes). Three commits: app shell (Sidebar + Topbar + `(app)` route-group layout, auth gated once); pastel Dashboard (`DashboardView` split from data-loading; stat cards calories/carbs/protein/budget; sage `CaloriesLine` chart w/ Weekly toggle, Monthly/Yearly honestly gated; macro Report donut; Meal-for-today; **snack recs**; safety strip → Security Console); and the Meal Plans / Security Console / Profile pages reusing existing verified components.
+- **Snacks = safety on a 2nd surface:** `lib/snacks.ts` is a curated list filtered through the SAME `screenMeal` guardrail — the preview (allergens peanuts+milk) correctly dropped PB rice cakes / Greek yogurt / cheese & crackers, showing only safe snacks. No extra model calls.
+- **Verification:** couldn't log into local dev (expired session; not creating accounts / entering passwords). Split `DashboardView` presentation from the page, rendered it with sample data on a throwaway `/design-preview` route (no auth/DB), screenshotted the full page (shell + cards + charts + meal-for-today + snacks), then **deleted** the temp route. Changed `GenerateButton`: redirect → `/meal-plans`, primary → sage.
+- **Errors & fixes:** (1) stale dev-server logs referenced old `blocked`/`safetyStats` code — not real (disk was already the fixed Session-6 versions); build confirmed clean. (2) After deleting `/design-preview`, `next build` failed on a stale generated type (`.next/dev/types/validator.ts` referencing the removed route) → `rm -rf .next && npm run build` → green.
+- **Next:** **taste preferences** — add `favorite_cuisines` / `disliked_foods` columns to `profiles` (Supabase migration + RLS-safe), surface in onboarding + Profile as a real editor, feed into `buildPlanMessages` as DATA (best-effort; allergens stay the only enforced constraint). Then verify, push on user's go, Phase 6.
+
+### 2026-07-22 — Session 8: design feedback round 1 (5 items)
+- **Attempted:** user tested the new dashboard (logged in as a `cybergen` account) and gave 5 items: (1) search bar doesn't work; (2) panel headings hard to catch — match the reference; (3) Meal Plans week is clustered — wants a less-cramped layout (idea: vertical days, click to reveal); (4) Security Console too black/scary; (5) Recent-events look like raw model logs.
+- **Result (this session — the clear 3 done, `npm run build` green):**
+  - #2 **headings:** "Calories Graph"/"Report"/"Meal for today"/"Snack recommendations" → bold + underline rule (reference look). Also fixed the calorie chart's clipped Y-axis (width 40→48, left margin 0).
+  - #4 **Security Console:** rewrote `SafetyDashboard` from the dark terminal into a light on-brand card (sage/amber/violet tinted tiles). Applies to /security AND /plan/[id] (same props).
+  - #5 **safety log:** replaced mono log lines with friendly activity cards derived from `event_type` + `allergen` — catches framed positively ("Unsafe meal caught & replaced…"), no internal "attempt/placeholder" noise. Confirmed via throwaway `/design-preview` (mock events), screenshotted, then deleted the temp route + `.next`.
+  - #1 **search:** was a deliberate disabled placeholder. User chose **Remove it** → removed the search field; that left the topbar only duplicating the sidebar user block, so the **whole Topbar was removed** (deleted `components/shell/Topbar.tsx`). Cleaner; content starts at each page's header.
+  - #3 **Meal Plans layout:** user chose **day tabs** → new `components/meal/WeekView.tsx` (client): a row of day chips (opens on today, "today" badge) + the selected day's breakfast/lunch/dinner as 3 roomy cards. Replaces the old `PlanGrid` on /meal-plans AND /plan/[id]; PlanGrid deleted.
+- **Verified LIVE (browser was logged in as the user's `cybergen` account):** real dashboard, real Meal Plans day-tabs (tab switching swaps the day correctly — Wed→Fri confirmed), and the real light Security Console with humanized event cards. `npm run build` green throughout. Temp `/design-preview` used then deleted again.
+- **Next:** **taste preferences** (profiles migration + form + prompt) — the last vision piece; then push on user's go; Phase 6. All Session-8 feedback (5/5) is done.
+
+### 2026-07-22 — Session 9: legibility pass + animated landing hero
+- **Attempted:** user asked to (a) make faint secondary labels (stat-card sublabels) obvious across the app, and (b) animate the landing hero (provided a `SoftBlurIn` motion component) with "Eat Healthy, Stay Healthy" + "yours truly, Aegis". Plus 4 questions (answered in chat).
+- **Result (`npm run build` green, verified live on cybergen):**
+  - **Legibility:** stat-card label → `#3D4653` semibold, sub → `#6B7280` medium (was #6B7280 / #9CA3AF); same darkening on Security Console tiles. Clearly more legible on the pastel cards.
+  - **Landing animation:** added dep **`motion`** (new locked lib alongside recharts); `components/ui/soft-blur-in.tsx` (per-char blur-in reveal, respects reduced-motion). Rewrote `app/page.tsx` hero: animated "Eat Healthy," / "Stay Healthy" + "yours truly, Aegis" signature; kept the safety hook as subhead; CTA → sage. No console errors.
+  - **Eval (answer to user Q2):** ran `npm run eval` → **236 meals / 14 profiles → 100.0% catch, 100.0% specificity** (lib/eval/run-eval.ts; results in lib/eval/RESULTS.md).
+- **Answers given:** Q1 snacks = curated `lib/snacks.ts` list filtered by the deterministic guardrail (NOT Groq-generated; the weekly PLAN is Groq-generated + screened). Q3 taste prefs est. ~30–45 min, low risk (additive profiles columns, nullable, defaults; only touches onboarding/profile/prompt).
+- **New dependency:** `motion` (^12) — landing hero animation only. Add to Architecture/Rules locked-lib list.
+- **Next:** taste preferences on user's go; then push; Phase 6.
+
+### 2026-07-22 — Session 10: sidebar collapse + per-day nutrition + hero one-liner
+- **Attempted:** 3 tweaks — (1) collapse button to minimize the sidebar; (2) make the Meal Plans nutrition donut show the SELECTED day's macros + name it; (3) shorten the hero paragraph to one catchy, non-generic line.
+- **Result (`npm run build` green, verified live on cybergen):**
+  - **Sidebar collapse:** `components/shell/Sidebar.tsx` — desktop chevron toggle minimizes to the icon rail and back; choice persisted in `localStorage` (`aegis-sidebar-collapsed`). Verified collapse/expand both work.
+  - **Per-day nutrition:** moved the donut into `WeekView` — it now recomputes the selected day's macros and labels it ("Nutrition · Wednesday"). Verified switching Wed (170g) → Thu (260g). Retired the standalone "Weekly nutrition" card on /meal-plans and /plan/[id]; top row is now Budget + Cost-by-day (removed unused `NutritionDonut`/`weeklyMacros` imports).
+  - **Hero copy:** replaced the paragraph with "AI plans your week; a safety shield keeps your allergens off the menu."
+- **Note:** confirmed the landing `motion` animation works on Vercel in principle (motion is a prod dependency, lockfile committed, `next build` green, client-hydrated) — but it's unproven live until we push (all still local on `feat/dashboard-shell`).
+- **Next:** taste preferences on user's go; then push; Phase 6.

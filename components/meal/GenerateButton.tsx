@@ -31,7 +31,7 @@ export function GenerateButton({
         setLoading(false);
         return;
       }
-      router.push(`/plan/${data.planId}`);
+      router.push("/meal-plans");
       router.refresh();
     } catch {
       setError("Network error — please try again.");
@@ -43,7 +43,7 @@ export function GenerateButton({
     "inline-flex items-center gap-2 rounded-[10px] px-4 py-2 text-sm font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed";
   const styles =
     variant === "primary"
-      ? "bg-[#FF6B6B] text-white hover:bg-[#FA5252]"
+      ? "bg-[#4C7B61] text-white hover:bg-[#3B6149]"
       : "border border-[#4C7B61] text-[#4C7B61] hover:bg-[#EAF1EC]";
 
   return (

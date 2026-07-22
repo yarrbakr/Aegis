@@ -1,4 +1,5 @@
 import Link from "next/link";
+import SoftBlurIn from "@/components/ui/soft-blur-in";
 
 export default function Home() {
   return (
@@ -7,24 +8,38 @@ export default function Home() {
         <div className="text-sm font-semibold uppercase tracking-wider text-[#4C7B61]">
           Aegis · AI meal planning with a safety shield
         </div>
-        <h1 className="mt-4 text-4xl font-bold leading-tight sm:text-5xl">
-          A meal planner that <span className="text-[#4C7B61]">can’t</span> feed you
-          <br />
-          what you’re allergic to.
+
+        {/* Animated hero title — per-character soft blur-in reveal. */}
+        <h1 className="mt-4 flex flex-col items-center gap-1">
+          <SoftBlurIn className="font-display text-4xl font-bold leading-tight tracking-tight text-[#1F2933] sm:text-6xl">
+            Eat Healthy,
+          </SoftBlurIn>
+          <SoftBlurIn
+            className="font-display text-4xl font-bold leading-tight tracking-tight text-[#4C7B61] sm:text-6xl"
+            delay={350}
+          >
+            Stay Healthy
+          </SoftBlurIn>
         </h1>
-        <p className="mt-5 max-w-xl text-lg text-[#6B7280]">
-          Every AI-generated meal passes a deterministic allergen guardrail before you ever see
-          it. Unsafe suggestions are blocked, logged, and regenerated.
+        <SoftBlurIn
+          className="mt-3 font-display text-lg font-medium italic text-[#6B7280] sm:text-xl"
+          delay={800}
+        >
+          yours truly, Aegis
+        </SoftBlurIn>
+
+        <p className="mt-6 max-w-xl text-lg text-[#4B5563]">
+          AI plans your week; a safety shield keeps your allergens off the menu.
         </p>
         <Link
           href="/login"
-          className="mt-8 rounded-lg bg-[#FF6B6B] px-6 py-3 font-semibold text-white hover:bg-[#FA5252]"
+          className="mt-8 rounded-lg bg-[#4C7B61] px-6 py-3 font-semibold text-white transition hover:bg-[#3B6149]"
         >
           Get started →
         </Link>
         <p className="mt-6 text-xs text-[#6B7280]">
-          Aegis filters your declared allergens. It is not a medical device and does not provide
-          medical advice.
+          Aegis filters your declared allergens. It is not a medical device and does
+          not provide medical advice.
         </p>
       </div>
     </main>
