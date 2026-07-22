@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PlanGrid } from "@/components/meal/PlanGrid";
 import { GenerateButton } from "@/components/meal/GenerateButton";
+import { usd, usdApprox } from "@/lib/format";
 import type { MealPlan, MealWithIngredients, Profile } from "@/lib/types";
 
 export default async function PlanPage({
@@ -67,14 +68,12 @@ export default async function PlanPage({
             <h1 className="text-2xl font-bold">Your week</h1>
             <p className="mt-1 text-sm text-[#6B7280]">
               {meals.length} meals ·{" "}
-              <span className="font-mono">
-                total ~{totalCost.toFixed(2)}
-              </span>
+              <span className="font-mono">total {usdApprox(totalCost)}</span>
               {budget != null ? (
                 <>
                   {" "}
                   of{" "}
-                  <span className="font-mono">{budget}</span> budget
+                  <span className="font-mono">{usd(budget)}</span> budget
                   {overBudget ? (
                     <span className="ml-1 text-[#E03131]">(over budget)</span>
                   ) : (

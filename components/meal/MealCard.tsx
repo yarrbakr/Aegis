@@ -1,5 +1,6 @@
 import type { MealWithIngredients } from "@/lib/types";
 import type { MealType } from "@/lib/validation";
+import { usdApprox } from "@/lib/format";
 
 const MEAL_EMOJI: Record<MealType, string> = {
   breakfast: "🍳",
@@ -37,7 +38,7 @@ export function MealCard({ meal }: { meal: MealWithIngredients }) {
       ) : null}
 
       <div className="mt-3 flex items-center gap-3 font-mono text-[11px] text-[#6B7280]">
-        {meal.cost != null ? <span>~{meal.cost}</span> : null}
+        {meal.cost != null ? <span>{usdApprox(meal.cost)}</span> : null}
         <span>
           P{meal.protein_g ?? 0} · C{meal.carbs_g ?? 0} · F{meal.fat_g ?? 0}
         </span>
