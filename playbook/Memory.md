@@ -181,3 +181,13 @@
   - #3 **Meal Plans layout:** user chose **day tabs** → new `components/meal/WeekView.tsx` (client): a row of day chips (opens on today, "today" badge) + the selected day's breakfast/lunch/dinner as 3 roomy cards. Replaces the old `PlanGrid` on /meal-plans AND /plan/[id]; PlanGrid deleted.
 - **Verified LIVE (browser was logged in as the user's `cybergen` account):** real dashboard, real Meal Plans day-tabs (tab switching swaps the day correctly — Wed→Fri confirmed), and the real light Security Console with humanized event cards. `npm run build` green throughout. Temp `/design-preview` used then deleted again.
 - **Next:** **taste preferences** (profiles migration + form + prompt) — the last vision piece; then push on user's go; Phase 6. All Session-8 feedback (5/5) is done.
+
+### 2026-07-22 — Session 9: legibility pass + animated landing hero
+- **Attempted:** user asked to (a) make faint secondary labels (stat-card sublabels) obvious across the app, and (b) animate the landing hero (provided a `SoftBlurIn` motion component) with "Eat Healthy, Stay Healthy" + "yours truly, Aegis". Plus 4 questions (answered in chat).
+- **Result (`npm run build` green, verified live on cybergen):**
+  - **Legibility:** stat-card label → `#3D4653` semibold, sub → `#6B7280` medium (was #6B7280 / #9CA3AF); same darkening on Security Console tiles. Clearly more legible on the pastel cards.
+  - **Landing animation:** added dep **`motion`** (new locked lib alongside recharts); `components/ui/soft-blur-in.tsx` (per-char blur-in reveal, respects reduced-motion). Rewrote `app/page.tsx` hero: animated "Eat Healthy," / "Stay Healthy" + "yours truly, Aegis" signature; kept the safety hook as subhead; CTA → sage. No console errors.
+  - **Eval (answer to user Q2):** ran `npm run eval` → **236 meals / 14 profiles → 100.0% catch, 100.0% specificity** (lib/eval/run-eval.ts; results in lib/eval/RESULTS.md).
+- **Answers given:** Q1 snacks = curated `lib/snacks.ts` list filtered by the deterministic guardrail (NOT Groq-generated; the weekly PLAN is Groq-generated + screened). Q3 taste prefs est. ~30–45 min, low risk (additive profiles columns, nullable, defaults; only touches onboarding/profile/prompt).
+- **New dependency:** `motion` (^12) — landing hero animation only. Add to Architecture/Rules locked-lib list.
+- **Next:** taste preferences on user's go; then push; Phase 6.
