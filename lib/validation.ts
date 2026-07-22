@@ -24,6 +24,21 @@ export const COMMON_ALLERGENS = [
   "sesame",
 ] as const;
 
+// Cuisines offered as quick-pick chips in onboarding. Free-text "other cuisines"
+// is allowed too. These are TASTE hints only — never a safety constraint.
+export const COMMON_CUISINES = [
+  "Italian",
+  "Mexican",
+  "Indian",
+  "Chinese",
+  "Thai",
+  "Japanese",
+  "Mediterranean",
+  "Middle Eastern",
+  "American",
+  "Korean",
+] as const;
+
 // Validated shape of the onboarding form. Never trust raw form input.
 // Name and budget are REQUIRED: Aegis addresses the user by name and plans
 // against a real budget, so neither is optional.
@@ -31,6 +46,9 @@ export const onboardingSchema = z.object({
   display_name: z.string().trim().min(1, "Please enter your name.").max(60),
   diet_type: z.enum(DIET_TYPES),
   allergens: z.array(z.string().trim().min(1)).max(30),
+  // Taste preferences — optional, best-effort hints (NOT safety-enforced).
+  favorite_cuisines: z.array(z.string().trim().min(1).max(40)).max(20).default([]),
+  disliked_foods: z.array(z.string().trim().min(1).max(60)).max(30).default([]),
   weekly_budget: z.coerce
     .number({ message: "Enter a weekly budget in USD." })
     .positive("Enter a weekly budget in USD.")
