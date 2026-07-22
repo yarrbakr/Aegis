@@ -39,6 +39,7 @@ export default async function DashboardPage() {
 
   const displayName = profile!.display_name?.trim() || "there";
   const allergens = profile!.allergens ?? [];
+  const dislikes = profile!.disliked_foods ?? [];
 
   const { data: planData } = await supabase
     .from("meal_plans")
@@ -93,7 +94,7 @@ export default async function DashboardPage() {
     return { type, name: meal?.name ?? null };
   });
 
-  const snacks = safeSnacks(allergens, 4);
+  const snacks = safeSnacks(allergens, dislikes, 4);
   const todayLabel = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     day: "numeric",
