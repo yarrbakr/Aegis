@@ -5,11 +5,11 @@
 ---
 
 ## 📍 Current status
-- **Phase:** **Phase 1 core done** ✅ — auth + onboarding verified end-to-end (local). Pending 2 user actions to ship it live.
-- **Currently working on:** Handing off 2 user actions: (1) turn OFF Supabase email confirmation, (2) add the 2 `NEXT_PUBLIC` env vars in Vercel. Then merge → push → deploy.
-- **Currently-edited file:** none (feat/auth committed at `4f4659f`).
-- **Live URLs:** **https://aegis-zeta-six.vercel.app** (skeleton; auth deploys once Vercel env vars are added).
-- **Blockers:** deployed auth needs (1) email-confirm OFF in Supabase, (2) `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` set in Vercel. Test account: `aegisdemo2026@gmail.com`.
+- **Phase:** **Phase 1 COMPLETE & LIVE** ✅ — auth + onboarding verified on production. Starting Phase 2 (AI generation).
+- **Currently working on:** Phase 2 prep — need the user's **`GROQ_API_KEY`** (+ optional `MISTRAL_API_KEY`) in `.env.local` before building `/api/generate-plan`.
+- **Currently-edited file:** none.
+- **Live URLs:** **https://aegis-zeta-six.vercel.app** — full auth + onboarding working live (email confirmation off; Vercel env vars set).
+- **Blockers:** need `GROQ_API_KEY` for Phase 2. Test accounts in Supabase: `aegisdemo2026@gmail.com`, `aegislive2027@gmail.com` (deletable).
 - **Git:** remote = `github.com/yarrbakr/Aegis`. **Pushed ✓** — `main` (6 commits, incl. `--no-ff` merge) and `feat/phase-0-skeleton` are live on origin. Workflow: branch-per-feature, commit everything, ask before every push (done for this push).
 
 ---
@@ -42,11 +42,11 @@
 - **Phase 1 (auth):** email/password auth (`@supabase/ssr`), `/login` (sign in/up + error surfacing), `/auth/signout`, protected `/dashboard`, `/onboarding` form → `profiles` (zod-validated, RLS-enforced), rebuilt landing. **Verified live locally:** signup→onboarding→dashboard persists; route protection works; custom-allergen merge works. Next 16 `middleware`→`proxy` migration done.
 
 ## 🔨 In progress
-- **Ship Phase 1 live:** user turns off email confirmation + adds the 2 Vercel env vars → merge `feat/auth`→`main` → push (auto-deploy) → verify auth on the live URL.
+- **Phase 2 — core AI generation** (branch `feat/generate-plan`): `POST /api/generate-plan` (Groq) → structured meal JSON (Zod-validated) → persist plan/meals/ingredients → 7-day plan grid UI. Needs `GROQ_API_KEY`.
 
 ## ⏭️ Next up
-1. Deploy Phase 1 (above) and verify auth on the live site.
-2. **Phase 2 — core AI generation:** `POST /api/generate-plan` (Groq) → structured meal JSON (Zod) → persist plan/meals/ingredients → 7-day plan grid UI.
+1. Finish Phase 2 (generation + plan grid), deploy, verify.
+2. **Phase 3 — the trust layer (headline):** deterministic allergen guardrail in `lib/guardrails/` + injection filter + Mistral fallback + "✓ allergen-safe" badges + `safety_events` logging.
 
 ## 🐞 Open bugs / issues
 - none yet.
@@ -100,3 +100,10 @@
 - **Errors & fixes:** (1) `SUPABASE_DB_URL` needed the **Session pooler** (IPv4), not Direct (IPv6-only on free tier). (2) test email `@aegis.app` rejected by Supabase → used a gmail. (3) sign-in blocked by **"Email not confirmed"** — project still has email confirmation ON; confirmed the test user via `auth.users.email_confirmed_at` to finish testing; **user must turn the toggle OFF** for real signups. (4) Next 16 `middleware`→`proxy` rename.
 - **Outputs:** commits `7531a44` (schema, merged to main), `4f4659f` (feat/auth). Test account `aegisdemo2026@gmail.com` (deletable).
 - **Next:** user (1) turns off email confirmation, (2) adds `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` in Vercel → merge `feat/auth`→`main` → push (auto-deploy) → verify live → Phase 2.
+
+### 2026-07-22 — Session 3b: Phase 1 shipped & verified LIVE
+- **Attempted:** Push `main` (Phase 1) → Vercel auto-deploy → verify auth end-to-end on production.
+- **Result:** ✅ Pushed (`392da1b`). Deploy went live. **Production test passed:** fresh signup (`aegislive2027@gmail.com`) logged in instantly (email confirmation now OFF) → onboarding → saved (Peanuts, Milk, custom "mango", budget 150, people 3) → dashboard shows the prefs; session persisted across a browser reopen. Vercel env vars + Supabase connection + RLS writes all working in prod. **Phase 1 COMPLETE & LIVE.**
+- **Errors:** none.
+- **Outputs:** live at https://aegis-zeta-six.vercel.app. Branches `feat/db-schema`, `feat/auth` pushed.
+- **Next:** Phase 2 — need `GROQ_API_KEY`, then build `/api/generate-plan` + plan grid.

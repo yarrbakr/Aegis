@@ -67,7 +67,15 @@ Following Armghan's loop — **Describe → Generate → Run → Observe → Ref
 **Cloud half — done:** ✓ pushed to GitHub, ✓ **deployed live to Vercel — https://aegis-zeta-six.vercel.app** (auto-deploys on every push to `main`). One snag worth noting: Vercel's importer spotted the `/backend` FastAPI and tried to deploy it as a *second* service — a neat confirmation that the folder reads as real FastAPI, but not what we wanted. Switching the Application Preset to **Next.js** gave a clean single-app deploy that leaves `/backend` as documentation. **Phase 0 is complete: the empty pipeline is live before a single feature exists** — exactly the de-risk order we set out to follow. Next: Supabase keys → Phase 1.
 
 ### Phase 1 — Auth & data foundation
-_pending_
+**Intended:** a logged-in user can save their diet, allergies, and budget — and *only* they can see it.
+
+**What happened:** wrote the schema as a real relational model (`profiles → meal_plans → meals → ingredients` + a `safety_events` audit log) and applied it with **Row-Level Security on every table, deny-by-default** — the access-control layer is in the repo as `supabase/policies.sql`, not an afterthought. Built email/password auth with `@supabase/ssr` (server + browser clients, a `proxy.ts` that refreshes the session), a protected dashboard, and an onboarding form that writes to `profiles` — validated with Zod, and written *as the user* so RLS enforces ownership automatically.
+
+**Verified, not assumed:** drove the real browser through signup → onboarding → dashboard, both locally and **on the live Vercel deployment**. Confirmed the profile auto-creates on signup (a Postgres trigger), route protection redirects anonymous users, a custom allergen ("mango") merges correctly, and the saved preferences persist and reload. Evidence over hype.
+
+**Learned:** Supabase ships with email confirmation *on* — great for real apps, but for an evaluator who needs instant access we turned it off. And Vercel's new key-safety warning correctly flags the `NEXT_PUBLIC_` anon key — which is *meant* to be public, because RLS (not secrecy) is what guards the data. Both are small trust decisions worth naming.
+
+**Next:** Phase 2 — generate a weekly plan with the LLM. Then Phase 3, the headline: the deterministic guardrail that makes those meals provably safe.
 
 ### Phase 2 — Core AI generation
 _pending_
