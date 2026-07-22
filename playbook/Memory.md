@@ -6,10 +6,10 @@
 
 ## 📍 Current status
 - **Phase:** Phase 0 *in progress* — local skeleton complete & verified; cloud deploy pending the user's accounts.
-- **Currently working on:** Push done ✓. Deciding FastAPI hosting (Render vs all-Vercel fallback); then Vercel deploy + Supabase keys.
+- **Currently working on:** **Locked all-Vercel (D10).** Next: deploy the Next.js skeleton to Vercel (first live URL) + create the Supabase project.
 - **Currently-edited file:** none (between steps).
-- **Live URLs:** none yet (Vercel / Render pending).
-- **Blockers:** (1) FastAPI-hosting decision (Render vs fold into Next.js route); (2) user creating the Supabase project (in progress) + connecting Vercel.
+- **Live URLs:** none yet (Vercel pending).
+- **Blockers:** user actions — creating the Supabase project (in progress) + importing the repo into Vercel (walking through now).
 - **Git:** remote = `github.com/yarrbakr/Aegis`. **Pushed ✓** — `main` (6 commits, incl. `--no-ff` merge) and `feat/phase-0-skeleton` are live on origin. Workflow: branch-per-feature, commit everything, ask before every push (done for this push).
 
 ---
@@ -18,14 +18,15 @@
 | # | Decision | Rationale |
 |---|---|---|
 | D1 | **Project = Aegis**, a safety-first AI meal planner | Distinctive; the safety layer answers CyberGen's core question. Name echoes their "Argus". |
-| D2 | **Stack:** Next.js + Tailwind + shadcn (Vercel), FastAPI (Render), Supabase Postgres | Mandated (Supabase/Vercel/Git) + FastAPI to match CyberGen's job stack. |
+| D2 | **Stack:** Next.js + Tailwind + shadcn + **server Route Handler** (Vercel) · Supabase Postgres. FastAPI (`/backend`) kept as a post-core stretch. | Mandated (Supabase/Vercel/Git). AI + guardrail run in a Next.js route on Vercel — one platform, RLS-enforced. See D10. |
 | D3 | **DB = Supabase Postgres, relational** | Data is relational (user→plans→meals→ingredients). "Default to Postgres" (class notes). |
 | D4 | **LLM = Groq (Llama 3.3 70B) primary, Mistral fallback** | Free, fast, OpenAI-compatible. Fallback = reliability story. |
-| D5 | **Guardrail is deterministic, not LLM-judged** | A security company never lets the model grade its own safety. |
+| D5 | **Guardrail is deterministic, not LLM-judged** (TypeScript, inside the Next.js route) | A security company never lets the model grade its own safety. |
 | D6 | **Design:** Fresh & clean; 60/30/10 → off-white `#F8F9FA` / sage `#4C7B61` / coral `#FF6B6B` | User-chosen palette. Safety Dashboard = dark console. |
-| D7 | **Deploy skeleton first, keep a Next.js-route fallback for FastAPI** | Protect "shipped". A working link beats a perfect stack. |
+| D7 | **Deploy skeleton first; ship on one platform (all-Vercel)** | Protect "shipped". A working link beats a perfect stack. Superseded the two-service plan — see D10. |
 | D8 | **No real payments/bank integrations; not a medical device** | Out of scope + safety. |
 | D9 | **Git workflow: commit every change (explained), branch-per-feature (`feat/*`), ask before every push** | Visible AI-first process + `main` stays deployable. Pinned in [Rules.md §6](Rules.md#6-git-workflow-branch-per-feature--commit-everything--ask-before-push) + CLAUDE.md. |
+| D10 | **All-Vercel is primary: AI generation + deterministic guardrail run in a Next.js server Route Handler. FastAPI/Render demoted to a post-core stretch (a live "evidence" endpoint only).** | (1) One platform → clean ship, no free-tier cold-start in front of the evaluator. (2) The route runs under the user's Supabase session → **RLS enforced automatically** (stronger security story for a safety app). (3) Same guardrail behavior, TypeScript instead of Python — the eval tests the *real* shipped code. FastAPI stays in `/backend` as documented architecture; deploy to Render only after the core ships. |
 
 ---
 
@@ -38,10 +39,10 @@
 - **Phase 0 (local):** scaffolded Next.js 16 + TS + Tailwind at repo root (`npm run build` passes); FastAPI `/backend` with `/health` (smoke-tested → 200); `.gitignore` + `.env.example` (frontend + backend); `git init`, remote set, 4 clean commits + merge to `main`.
 
 ## 🔨 In progress
-- **Phase 0 (cloud deploy):** push to GitHub (pending permission) → deploy Next.js to Vercel → deploy FastAPI to Render → create Supabase project → wire env vars.
+- **Phase 0 (cloud deploy):** ✓ push. → **deploy Next.js to Vercel (first live URL)** → create Supabase project → wire env vars. (No Render — all-Vercel per D10.)
 
 ## ⏭️ Next up
-1. **Finish Phase 0 deploy:** push → Vercel (live URL) → Render (`/health` 200) → Supabase project + keys → env vars → confirm the frontend can reach `/health`.
+1. **Finish Phase 0 deploy:** deploy to Vercel (live URL) → Supabase project + keys → wire env vars (Phase 1 needs them).
 2. Then **Phase 1** (auth + preferences: run schema/policies, Supabase Auth, onboarding form).
 
 ## 🐞 Open bugs / issues
@@ -75,3 +76,10 @@
 - **Errors & fixes:** (1) `create-next-app` rejects folder names starting with `_` → scaffolded into `aegis-tmp`, moved files to root, deleted temp. (2) temp folder `rm` hit "Device or resource busy" (Windows handle) → removed via PowerShell. (3) pinned `openai==1.59.0` didn't exist on the index → switched to capped ranges, installed, then re-pinned exact resolved versions (openai 2.46.0, fastapi 0.139.2, uvicorn 0.51.0, pydantic 2.13.4, httpx 0.28.1, python-dotenv 1.2.2, pytest 8.4.2).
 - **Outputs & logs:** commits `fa90c87` (foundation) → `f2905fd` (Next scaffold) → `af6fc52` (FastAPI) → `e7aa8b6` (env examples) → `2c74370` (merge). Nothing pushed.
 - **Next:** Get push permission; guide the user through Vercel + Render + Supabase; wire env vars; confirm frontend → `/health`.
+
+### 2026-07-22 — Session 2b: pushed + locked all-Vercel (D10)
+- **Attempted:** Push to origin (with permission); then debated FastAPI/Render vs all-Vercel with the user.
+- **Result:** Pushed `main` (6 commits) + `feat/phase-0-skeleton` to `github.com/yarrbakr/Aegis`. After a full pros/cons discussion, **locked all-Vercel (D10)**: generation + deterministic guardrail run in a Next.js server Route Handler; FastAPI/Render becomes a post-core "evidence endpoint" stretch. Deciding factors: one-platform clean ship, no free-tier cold-start, and RLS enforced automatically via the user's session (stronger security story). No user-facing feature lost; eval moves from pytest to a TS script that tests the real shipped guardrail.
+- **Errors:** none.
+- **Outputs:** playbook updated — Memory (D2/D5/D7 amended, D10 added), Architecture (flow, stack, deployment, structure), Phases (0/2/3/5, stretch), Documentary (pivot decision + value map).
+- **Next:** Walk the user through the Vercel deploy (first live URL); create Supabase project; wire env vars.

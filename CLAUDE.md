@@ -29,11 +29,11 @@ Update Memory.md's **Current status**, **Completed**, **In progress**, and **Nex
 
 ## 🔒 Locked decisions (full list + rationale in [Memory.md](playbook/Memory.md#-locked-decisions))
 - **Aegis** = safety-first AI meal planner.
-- **Stack:** Next.js + Tailwind + shadcn/ui (Vercel) · FastAPI (Render) · Supabase Postgres + Auth + RLS.
+- **Stack (D10):** Next.js + Tailwind + shadcn/ui + **server Route Handler** (Vercel) · Supabase Postgres + Auth + RLS. **All-Vercel** — the AI + deterministic guardrail run in a Next.js route. FastAPI (`/backend`) = documented architecture + **post-core Render stretch**.
 - **LLM:** Groq (Llama 3.3 70B) primary, Mistral fallback.
-- **The guardrail is deterministic code, never an LLM self-check.**
+- **The guardrail is deterministic code (TypeScript, in the route), never an LLM self-check.**
 - **Design:** fresh & clean, 60/30/10 — off-white `#F8F9FA` / sage `#4C7B61` / coral `#FF6B6B`.
-- **Ship > ambition:** deploy the skeleton first; keep a Next.js-route fallback for FastAPI.
+- **Ship > ambition:** deploy the Next.js skeleton first; FastAPI/Render only after the core ships.
 
 ## 🧭 Working principles (from Armghan's session + CyberGen's rubric)
 - **Design before generate.** Decide, then build. The playbook already did this — follow it.
@@ -52,10 +52,11 @@ Update Memory.md's **Current status**, **Completed**, **In progress**, and **Nex
 ## 🗂️ Where things live
 - `playbook/` — PRD, Architecture, Rules, Phases, Design, Memory, Prompt.
 - `Documentary.md` — the build journey, CyberGen-framed. **Update it at each phase boundary.**
-- `app/`, `components/`, `lib/` — Next.js frontend. `backend/` — FastAPI. `supabase/` — schema + RLS.
+- `app/`, `components/`, `lib/` — Next.js app (incl. `app/api/` AI route + `lib/guardrails/`). `backend/` — FastAPI (post-core stretch). `supabase/` — schema + RLS.
 
-## ⚙️ Commands (filled in as the project is set up)
-- Frontend dev: `npm run dev`
-- Backend dev: `uvicorn backend.main:app --reload`
-- Eval: `python backend/eval/run_eval.py`
-- _(update this section once the projects are scaffolded)_
+## ⚙️ Commands
+- App dev (frontend + AI route): `npm run dev`
+- Build (matches Vercel): `npm run build`
+- Eval (TS, Phase 5): _TBD — will test `lib/guardrails` and print the catch rate._
+- FastAPI stretch (local): `uvicorn backend.main:app --reload` → `GET /health`
+- _(update as more scripts are added)_

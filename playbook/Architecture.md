@@ -13,12 +13,12 @@
 | **Charts** | Recharts | React-native charting for the budget bar, nutrition donut, safety dashboard. |
 | **Database** | Supabase (Postgres) | Data is **relational** (user → plans → meals → ingredients). His rule: relations → Postgres; default to Postgres. |
 | **Auth** | Supabase Auth + Row-Level Security | Real per-user access control, not decoration. |
-| **AI backend** | FastAPI (Python) | **Literally CyberGen's job-title stack.** Hosts generation + guardrail. |
+| **AI backend** | Next.js Route Handler (server) — *primary* · FastAPI kept as a stretch | Generation + guardrail run server-side on Vercel (one platform, RLS-enforced — see [Memory.md](Memory.md) D10). A FastAPI version lives in `/backend` as documented architecture, deployed to Render only as a post-core "evidence" stretch — matching CyberGen's FastAPI+LLM stack when time allows. |
 | **LLM** | Groq (Llama 3.3 70B) primary · Mistral fallback | Free, fast (speed = "it just works" taste), OpenAI-compatible. Fallback = a small reliability story. |
-| **Deploy** | Vercel (frontend) + Render (FastAPI) | Vercel is mandated. Render free tier is the textbook FastAPI deploy. |
+| **Deploy** | Vercel (frontend + AI route) · Supabase hosted | One platform: the AI call + guardrail run in a Next.js server route on Vercel. Simpler ship, no cold-start, and the route uses the user's session so RLS is enforced. |
 | **Version control** | Git + GitHub | Mandated. Small, meaningful commits = visible AI-first process. |
-| **API testing** | Postman / Thunder Client | Named in class notes. |
-| **Validation** | Zod (frontend) · Pydantic (backend) | Never trust unvalidated data — especially LLM output. |
+| **API testing** | Postman / Thunder Client / route tests | Named in class notes. |
+| **Validation** | Zod (frontend **and** the server route) · Pydantic in the FastAPI stretch | Never trust unvalidated data — especially LLM output. |
 
 ### The backend vs. database, in one line each
 - **Supabase (database)** = the *pantry* — it only stores data.
@@ -33,11 +33,11 @@
 flowchart TD
     U[User] -->|sets diet, allergies, budget| FE[Next.js frontend on Vercel]
     FE -->|save prefs| SB[(Supabase / Postgres)]
-    FE -->|Generate plan request| API[FastAPI backend on Render]
+    FE -->|Generate plan request| API["Next.js Route Handler (server-side, Vercel)"]
     API -->|1. input guardrail: injection filter| API
     API -->|2. prompt + call| LLM[Groq LLM  ·  Mistral fallback]
     LLM -->|structured meal JSON| API
-    API -->|3. OUTPUT GUARDRAIL: allergen check| GR{Safe?}
+    API -->|3. OUTPUT GUARDRAIL: deterministic allergen check| GR{Safe?}
     GR -->|unsafe| RG[Block + regenerate, log event]
     RG --> API
     GR -->|safe| SAVE[Save plan/meals/ingredients + log safety_event]
@@ -47,6 +47,8 @@ flowchart TD
 ```
 
 **The critical rule visible in this diagram:** the LLM output never reaches the user without passing the deterministic allergen guardrail. That gate *is* the product.
+
+The generation + guardrail run in a **Next.js server Route Handler on Vercel** (one platform; the route uses the user's Supabase session so RLS is enforced on every write). The same guardrail concept also exists in the `/backend` FastAPI as documented architecture — deployed to Render only as a post-core "evidence" stretch. See [Memory.md](Memory.md) D10.
 
 ---
 
@@ -121,7 +123,7 @@ Cybergen-internship-task/            ← repo root
 ├─ app/                             ← Next.js App Router (Vercel)
 │  ├─ (auth)/login, signup
 │  ├─ dashboard/                    ← main app: prefs, plan view, safety dashboard
-│  ├─ api/                          ← Next.js route (FALLBACK AI path if FastAPI is cut)
+│  ├─ api/                          ← Next.js server route: AI generation + guardrail (PRIMARY path)
 │  ├─ layout.tsx  page.tsx          ← landing
 ├─ components/
 │  ├─ ui/                           ← shadcn components
@@ -129,10 +131,11 @@ Cybergen-internship-task/            ← repo root
 │  └─ meal/                         ← MealCard, PlanGrid, SafetyBadge
 ├─ lib/
 │  ├─ supabase/                     ← client + server helpers
-│  ├─ types.ts                      ← shared TS types (mirror Pydantic + Zod)
+│  ├─ guardrails/                   ← allergen.ts (OUTPUT) + injection.ts (INPUT) — deterministic
+│  ├─ types.ts                      ← shared TS types (Zod-inferred)
 │  └─ validation.ts                 ← Zod schemas
 │
-├─ backend/                         ← FastAPI (Render)
+├─ backend/                         ← FastAPI (post-core Render stretch; documented architecture)
 │  ├─ main.py                       ← app + endpoints
 │  ├─ guardrails/
 │  │  ├─ allergen.py                ← OUTPUT guardrail (deterministic)
@@ -150,20 +153,21 @@ Cybergen-internship-task/            ← repo root
    └─ policies.sql
 ```
 
-### API endpoints (FastAPI)
+### API routes (Next.js Route Handlers, server-side on Vercel)
 | Method | Path | Does |
 |---|---|---|
-| `POST` | `/generate-plan` | input guardrail → LLM → output guardrail → returns safe plan + logs events |
-| `POST` | `/check` | (utility) run the guardrail on an arbitrary meal — used by the eval harness |
-| `GET` | `/health` | liveness (deployed first, in Phase 0) |
+| `POST` | `/api/generate-plan` | input guardrail → LLM → deterministic output guardrail → returns safe plan + logs events |
+| — | `lib/guardrails/*` | the eval imports the guardrail directly (no network needed) |
+
+*(The `/backend` FastAPI mirrors these — `POST /generate-plan`, `POST /check`, `GET /health` — kept for the post-core Render stretch.)*
 
 ---
 
-## 5. Deployment & the fallback (protecting "shipped")
+## 5. Deployment (protecting "shipped")
 
-- **Primary:** Next.js → Vercel, FastAPI → Render, Supabase hosted. Env vars hold all keys.
-- **De-risk rule:** in Phase 0 we deploy an empty skeleton to *both* live URLs and confirm they work **before building features.** Prove the pipeline, then build inward.
-- **Fallback:** if the two-service setup fights us by ~hour 4, the generation + guardrail collapse into a Next.js API route (`app/api/generate-plan`) and we drop FastAPI. The guardrail logic is written portable so this swap is cheap. **A working link beats a perfect stack.**
+- **Primary (locked — D10):** everything on **Vercel** — the Next.js frontend plus a **server-side Route Handler** (`app/api/generate-plan`) that runs the LLM call + deterministic guardrail. **Supabase** hosted. Env vars hold all keys. One platform = one clean deploy, no free-tier cold-start, and the route runs under the user's session so **RLS is enforced** on every write.
+- **De-risk rule:** Phase 0 deploys the empty Next.js skeleton to a live Vercel URL and confirms it loads **before** building features.
+- **Post-core stretch (only after the core ships & is safe):** deploy the `/backend` FastAPI to **Render** as a live "evidence" endpoint (`/health`, `/docs`) — the same guardrail concept in Python — for the CyberGen FastAPI+LLM signal. Optional; never on the critical path. **A working link beats a perfect stack.**
 
 ---
 *Locked decisions live in [Memory.md](Memory.md). How-we-work rules live in [Rules.md](Rules.md).*

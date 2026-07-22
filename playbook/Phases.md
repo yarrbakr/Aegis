@@ -7,13 +7,14 @@ Time budget: ~7 hours. Phases are sized so that if we run out of time, we still 
 ---
 
 ## Phase 0 — Setup & skeleton deploy  *(de-risk everything first)*
-**Goal: a live, empty pipeline before any features exist.**
-- [ ] Init Next.js (TypeScript, Tailwind, shadcn) at repo root; `git init` + push to GitHub.
-- [ ] Create Supabase project; grab keys.
-- [ ] Minimal FastAPI in `/backend` with `GET /health`.
-- [ ] Deploy Next.js → **Vercel** (live URL works). Deploy FastAPI → **Render** (`/health` returns 200).
-- [ ] Wire env vars (Supabase URL/key, Groq key, backend URL). `.env.example` committed.
-- **Done when:** both live URLs load and the frontend can reach `/health`.
+**Goal: a live, empty frontend before any features exist.** (All-Vercel — D10.)
+- [x] Init Next.js (TypeScript + Tailwind) at repo root; `git init` + push to GitHub. (shadcn added when we build UI.)
+- [x] Minimal FastAPI in `/backend` with `GET /health` (kept for the post-core Render stretch).
+- [x] `.env.example` committed (frontend + backend).
+- [ ] Create Supabase project; grab URL + anon key.
+- [ ] Deploy Next.js → **Vercel** (live URL works).
+- [ ] Wire env vars (Supabase URL + anon key) in Vercel + `.env.local`.
+- **Done when:** the live Vercel URL loads.
 
 ## Phase 1 — Auth & data foundation
 **Goal: a user can log in and save their preferences.**
@@ -24,15 +25,15 @@ Time budget: ~7 hours. Phases are sized so that if we run out of time, we still 
 
 ## Phase 2 — Core AI generation
 **Goal: generate and display a weekly plan.**
-- [ ] `POST /generate-plan`: build fixed system prompt + user prefs → Groq → structured meal JSON (Pydantic-validated).
-- [ ] Persist plan → meals → ingredients to Supabase.
+- [ ] `POST /api/generate-plan` (Next.js Route Handler): fixed system prompt + user prefs → Groq → structured meal JSON (**Zod**-validated).
+- [ ] Persist plan → meals → ingredients to Supabase (server-side, RLS-enforced via the user's session).
 - [ ] Plan view UI: 7-day grid of meal cards (name, cost, calories).
 - **Done when:** clicking "Generate" returns a saved, displayed weekly plan. (No guardrail yet — that's next.)
 
 ## Phase 3 — The trust layer  *(the headline — do NOT skip or defer)*
 **Goal: the app is provably safe.**
-- [ ] **Output guardrail** (`guardrails/allergen.py`): scan each meal's `ingredients.allergen_tags` against the user's `allergens`. Unsafe → block, log `meal_blocked`, regenerate (≤3). Safe → log `meal_passed`.
-- [ ] **Input guardrail** (`guardrails/injection.py`): screen free-text prefs for injection patterns; log `injection_detected`.
+- [ ] **Output guardrail** (`lib/guardrails/allergen.ts`): scan each meal's `ingredients.allergen_tags` against the user's `allergens`. Unsafe → block, log `meal_blocked`, regenerate (≤3). Safe → log `meal_passed`.
+- [ ] **Input guardrail** (`lib/guardrails/injection.ts`): screen free-text prefs for injection patterns; log `injection_detected`.
 - [ ] Visible **"✓ allergen-safe"** badge on every meal card.
 - [ ] Mistral fallback wired into the LLM client.
 - **Done when:** we can force an unsafe suggestion and watch it get blocked + regenerated, with an event logged.
@@ -46,9 +47,9 @@ Time budget: ~7 hours. Phases are sized so that if we run out of time, we still 
 
 ## Phase 5 — Evidence & eval
 **Goal: a number that proves it works.**
-- [ ] `eval/run_eval.py`: run N generations across `profiles.json` allergy profiles, assert zero unsafe meals pass the guardrail, print **catch rate**.
+- [ ] `eval` script (TypeScript/node): run N generations across allergy profiles, assert zero unsafe meals pass the guardrail, print **catch rate**. Tests the *real* shipped `lib/guardrails` code (not a copy).
 - [ ] Save the eval output (screenshot/log) for the README.
-- **Done when:** `run_eval.py` prints a clean catch-rate figure (target 100%).
+- **Done when:** the eval prints a clean catch-rate figure (target 100%).
 
 ## Phase 6 — Docs & submission
 **Goal: the AI-first process is visible and everything is submitted.**
@@ -61,7 +62,8 @@ Time budget: ~7 hours. Phases are sized so that if we run out of time, we still 
 ---
 
 ## Stretch — only if genuinely ahead
+- **Deploy the `/backend` FastAPI to Render** as a live "evidence" endpoint (`/health` + `/docs`) — the CyberGen FastAPI+LLM signal, added *only after* the core ships (D10).
 - Shopping list from the plan · regenerate a single meal · **RAG** recipe retrieval.
 
-## Fallback trigger
-If by ~hour 4 the FastAPI/Render path is blocking us, execute the [Architecture fallback](Architecture.md#5-deployment--the-fallback-protecting-shipped): fold generation + guardrail into a Next.js API route, drop FastAPI, keep shipping.
+## Architecture note
+All-Vercel is the **primary** path (generation + guardrail in a Next.js server route) — see [Memory.md](Memory.md) D10. FastAPI/Render moved to the post-core **stretch** above. Keeps `main` shippable on one platform.

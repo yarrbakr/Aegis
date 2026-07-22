@@ -46,7 +46,7 @@ All of it is recorded in [Architecture.md](playbook/Architecture.md), [PRD.md](p
 | Design before generate | The entire `/playbook` written before code. |
 | AI-first workflow, visibly | `CLAUDE.md`, a decision log, a prompt log, and small commits — the process is in the repo. |
 | Evidence & measurement | An eval harness that prints the guardrail's catch rate as a number. |
-| FastAPI + RAG/agents | FastAPI backend hosting the generation + guardrail; RAG kept as a scoped stretch. |
+| FastAPI + RAG/agents | Generation + guardrail run server-side in a Next.js route for a clean, RLS-enforced ship; a FastAPI version is kept in `/backend` and deployed to Render as a post-core stretch. RAG kept as a scoped stretch. |
 | Their product suite | Guardrails (allergen block), Cortex Shield (injection filter), Argus (Safety Dashboard + eval), Rego (RLS access control) — four products, demonstrated in a consumer app. |
 
 ---
@@ -62,7 +62,9 @@ Following Armghan's loop — **Describe → Generate → Run → Observe → Ref
 
 **Learned / decided:** pin backend deps to versions actually resolved locally so Render reproduces the same build (a guessed pin, `openai==1.59.0`, didn't exist — caught it before it ever reached the cloud). Keep the Python service in `/backend`, deliberately not `/api`, so Vercel doesn't mistake it for serverless functions.
 
-**Next (cloud half):** push to GitHub, connect Vercel (frontend) and Render (backend), create the Supabase project, and wire env vars — then confirm the deployed frontend can reach the deployed `/health`.
+**A decision we revisited — and this is *why* we write decisions down.** The original plan put the AI + guardrail on a separate FastAPI service on Render. Talking it through, **all-Vercel won**: the generation + guardrail now run in a Next.js server route instead, which (1) ships on **one platform** with no flaky free-tier cold-start in front of the evaluator, and (2) runs under the user's Supabase session so **Row-Level Security is enforced automatically** — a stronger security story for a safety-branded app. No user-facing feature changes; the eval even gets better (it tests the *real* shipped guardrail, not a copy). The FastAPI code stays in `/backend` as documented architecture and a *post-core* Render stretch. *Shipped beats ambitious — the simpler, safer design won.* (Full rationale: [Memory.md](playbook/Memory.md) D10.)
+
+**Next (cloud half):** ✓ pushed to GitHub. → create the Supabase project → deploy the Next.js app to Vercel (first live URL) → wire env vars.
 
 ### Phase 1 — Auth & data foundation
 _pending_
