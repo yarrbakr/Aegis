@@ -170,3 +170,13 @@
 - **Verification:** couldn't log into local dev (expired session; not creating accounts / entering passwords). Split `DashboardView` presentation from the page, rendered it with sample data on a throwaway `/design-preview` route (no auth/DB), screenshotted the full page (shell + cards + charts + meal-for-today + snacks), then **deleted** the temp route. Changed `GenerateButton`: redirect → `/meal-plans`, primary → sage.
 - **Errors & fixes:** (1) stale dev-server logs referenced old `blocked`/`safetyStats` code — not real (disk was already the fixed Session-6 versions); build confirmed clean. (2) After deleting `/design-preview`, `next build` failed on a stale generated type (`.next/dev/types/validator.ts` referencing the removed route) → `rm -rf .next && npm run build` → green.
 - **Next:** **taste preferences** — add `favorite_cuisines` / `disliked_foods` columns to `profiles` (Supabase migration + RLS-safe), surface in onboarding + Profile as a real editor, feed into `buildPlanMessages` as DATA (best-effort; allergens stay the only enforced constraint). Then verify, push on user's go, Phase 6.
+
+### 2026-07-22 — Session 8: design feedback round 1 (5 items)
+- **Attempted:** user tested the new dashboard (logged in as a `cybergen` account) and gave 5 items: (1) search bar doesn't work; (2) panel headings hard to catch — match the reference; (3) Meal Plans week is clustered — wants a less-cramped layout (idea: vertical days, click to reveal); (4) Security Console too black/scary; (5) Recent-events look like raw model logs.
+- **Result (this session — the clear 3 done, `npm run build` green):**
+  - #2 **headings:** "Calories Graph"/"Report"/"Meal for today"/"Snack recommendations" → bold + underline rule (reference look). Also fixed the calorie chart's clipped Y-axis (width 40→48, left margin 0).
+  - #4 **Security Console:** rewrote `SafetyDashboard` from the dark terminal into a light on-brand card (sage/amber/violet tinted tiles). Applies to /security AND /plan/[id] (same props).
+  - #5 **safety log:** replaced mono log lines with friendly activity cards derived from `event_type` + `allergen` — catches framed positively ("Unsafe meal caught & replaced…"), no internal "attempt/placeholder" noise. Confirmed via throwaway `/design-preview` (mock events), screenshotted, then deleted the temp route + `.next`.
+  - #1 **search:** explained it's a deliberate disabled placeholder (not broken). **Deferred to user choice** (make it functional / remove / leave as coming-soon).
+  - #3 **Meal Plans layout:** **deferred to user choice** (day-tabs vs their vertical-list master-detail vs accordion vs keep-grid).
+- **Next:** get the user's picks on #1 + #3, implement them; then taste preferences; then push on their go; Phase 6.
