@@ -1,0 +1,9 @@
+# Aegis backend dependencies — exact pins (resolved & smoke-tested locally,
+# so Render reproduces the same working build).
+fastapi==0.139.2
+uvicorn[standard]==0.51.0
+pydantic==2.13.4
+python-dotenv==1.2.2
+openai==2.46.0          # Groq & Mistral are OpenAI-compatible
+httpx==0.28.1
+pytest==8.4.2           # eval harness / guardrail tests (Phase 5)
