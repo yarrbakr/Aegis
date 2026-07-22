@@ -10,7 +10,7 @@
 - **Currently-edited file:** none.
 - **Live URLs:** **https://aegis-zeta-six.vercel.app** — now deploying the FULL app (P3 guardrail + P4 dashboard/charts + USD + Session-6 fixes). Generation needs `GROQ_API_KEY` in Vercel (user says it's set). Confirm the Vercel build went green + spot-check live before relying on it.
 - **Blockers:** none.
-- **Git:** remote = `github.com/yarrbakr/Aegis`. **`origin/main` = `79b1d8a`** (taste preferences merged + pushed). `feat/taste-preferences` pushed. In sync. Workflow: branch-per-feature, commit everything, ask before every push. No new runtime deps (`pg` was `--no-save`, used once to apply the migration, not in package.json).
+- **Git:** remote = `github.com/yarrbakr/Aegis`. **`origin/main` = `650e1c7`** (taste prefs `79b1d8a` + loading/LLM-UX fix `650e1c7`, both merged + pushed). `feat/taste-preferences` + `fix/loading-and-llm-ux` pushed. In sync. Workflow: branch-per-feature, commit everything, ask before every push. No new runtime deps.
 - **Eval number (for README):** `npm run eval` → **236 meals / 14 profiles → 100.0% catch rate, 100.0% specificity** (saved in `lib/eval/RESULTS.md`).
 
 ---
@@ -56,8 +56,8 @@
 - **Stretch (only if ahead):** deploy `/backend` FastAPI to Render as a live evidence endpoint; single-meal regenerate button; RAG.
 
 ## 🐞 Open bugs / issues
-- **Groq free-tier daily token cap (100k TPD) — needs a user action, NOT a code bug.** Live `/api/generate-plan` 502'd because the day's testing exhausted the cap (verified: Groq 429 "Used 95530 / Limit 100000"). Groq key + model are valid (trivial call → 200). Resets daily. **Fixes:** (a) wait for reset / upgrade Groq to Dev tier; (b) **activate the Mistral fallback** — set `MISTRAL_API_KEY` in `.env.local` + Vercel (code already supports it; that's the answer to "what happened to the Mistral fallback" — it was never keyed). Mitigations shipped in Session 13: single-meal calls now cap `max_tokens` at 2000 (was 8000) to stretch the daily budget, and a 429 now shows a friendly "at capacity" message instead of a generic 502.
-- **Also confirm the live Vercel `GROQ_API_KEY`** matches the current working key (rotate parity) when re-testing after reset.
+- **Groq free-tier daily token cap (100k TPD).** Live `/api/generate-plan` 502'd because the day's testing exhausted the cap (verified twice: Groq 429 "Used 95609 / Limit 100000"). Groq key + model valid (trivial call → 200). Resets daily. **Now mitigated:** `MISTRAL_API_KEY` added (Session 13b) → the fallback is active; single-meal calls cap `max_tokens` at 2000; a 429 shows a friendly "at capacity" message (429, not 502). **Still confirm Vercel has both `GROQ_API_KEY` (current) and `MISTRAL_API_KEY`** for the live fallback to work.
+- **⚠️ Mistral fallback is SLOW — Vercel 60s timeout risk.** Verified `MISTRAL_API_KEY` works end-to-end (HTTP 200, full 21-meal plan, honored allergen + dislike), **but `mistral-large-latest` took ~56s** for one generation — right under Vercel's `maxDuration=60`. If Groq is capped AND the plan needs a safety regen / dislike re-roll (extra Mistral calls), it would exceed 60s and time out. **Recommended fix:** switch the fallback model to a faster one (`mistral-small-latest`) in `lib/llm/groq.ts` (`MISTRAL_MODEL`) — speed > quality for a degraded-mode fallback. Offered to the user; pending their call.
 
 ---
 
@@ -248,3 +248,10 @@
   - **#3 answer:** fallback is real but unkeyed → recommend the user set `MISTRAL_API_KEY` (free) in `.env.local` + Vercel to activate it (the proper resilience fix for #1 too).
 - **Committed (unpushed) on `fix/loading-and-llm-ux`:** `d06e2ff`. **Push NOT yet authorized for this branch** — ask.
 - **Next:** ask to push/merge `fix/loading-and-llm-ux`; user action on Groq (reset/upgrade) + optional `MISTRAL_API_KEY`; then Phase 6.
+
+### 2026-07-22 — Session 13b: Mistral key added + verified; loading/UX fix shipped
+- **Attempted:** user added `MISTRAL_API_KEY` to `.env.local` and said "push this" (the loading branch).
+- **Result:** ✅ Mistral fallback **verified working** — probed the API directly with the new key: HTTP **200**, returned a full valid **21-meal** plan, honored the test allergen (0 peanut) and dislike (0 mushroom). Then merged `fix/loading-and-llm-ux` → `main` (`--no-ff`, merge **`650e1c7`**) and **pushed** (`304909d..650e1c7`); pushed the branch too. Vercel auto-deploy triggered.
+- **⚠️ Finding:** the Mistral generation took **~56s** (vs Groq ~13s) — dangerously close to Vercel's `maxDuration=60`. Fallback is fine for a single-pass gen but risks timeout if a regen/re-roll is needed. Logged in Open bugs; recommended switching `MISTRAL_MODEL` → `mistral-small-latest` (faster). Awaiting user's call.
+- **Reminder to user:** add `MISTRAL_API_KEY` to **Vercel** env too (not just `.env.local`) so the live fallback works.
+- **Next:** (optional) faster fallback model; user adds Mistral key to Vercel; then **Phase 6** (README + submission).
