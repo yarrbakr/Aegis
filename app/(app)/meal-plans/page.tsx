@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { PlanGrid } from "@/components/meal/PlanGrid";
+import { WeekView } from "@/components/meal/WeekView";
 import { GenerateButton } from "@/components/meal/GenerateButton";
 import { BudgetMeter } from "@/components/charts/BudgetMeter";
 import { BudgetBar } from "@/components/charts/BudgetBar";
@@ -129,8 +129,8 @@ export default async function MealPlansPage() {
             </div>
           </div>
 
-          <div className="mt-6">
-            <PlanGrid meals={meals} />
+          <div className="mt-6 rounded-2xl border border-[#E7E8EC] bg-white p-5">
+            <WeekView meals={meals} />
           </div>
 
           <div className="mt-4 flex items-center gap-2 rounded-xl border border-[#E7E8EC] bg-white px-4 py-3 text-xs text-[#6B7280]">
