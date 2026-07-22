@@ -99,6 +99,22 @@ function validateMeal(raw: string): GeneratedMeal | null {
 
 // ── Generation ──────────────────────────────────────────────────────────────
 
+// Keep at most one meal per (day_of_week, meal_type) slot — first wins. The
+// model (especially the smaller Mistral fallback) can return duplicates or more
+// than 21 meals; since we persist meals keyed by slot, duplicates would collide
+// and mis-map ingredients. Normalizing here keeps the plan coherent on every path.
+function dedupeBySlot(meals: GeneratedMeal[]): GeneratedMeal[] {
+  const seen = new Set<string>();
+  const out: GeneratedMeal[] = [];
+  for (const m of meals) {
+    const key = `${m.day_of_week}-${m.meal_type}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(m);
+  }
+  return out;
+}
+
 // Generate the full week, validating output, with a single repair retry.
 async function generatePlan(
   profile: Profile,
@@ -108,12 +124,12 @@ async function generatePlan(
   const raw = await chatJSON(messages);
 
   const first = validate(raw);
-  if (first.ok) return first.data;
+  if (first.ok) return { meals: dedupeBySlot(first.data.meals) };
 
   const repair = buildRepairMessages(messages, raw, first.error);
   const raw2 = await chatJSON(repair);
   const second = validate(raw2);
-  if (second.ok) return second.data;
+  if (second.ok) return { meals: dedupeBySlot(second.data.meals) };
 
   throw new LLMError(
     `Model output failed validation after repair (${second.error}).`,
