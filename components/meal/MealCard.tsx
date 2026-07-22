@@ -8,12 +8,17 @@ const MEAL_EMOJI: Record<MealType, string> = {
   dinner: "🍽️",
 };
 
-// One meal in the weekly grid. Pure display — the data was validated + saved by
-// the generate route. (The Phase 3 "✓ allergen-safe" badge lands here.)
+// One meal in the weekly grid. Pure display — the data was validated, screened
+// by the deterministic allergen guardrail, and saved by the generate route.
+// Every meal shown here PASSED that guardrail, so it always carries the safe
+// badge (Design.md: safe = green + ✓; a "blocked" state never appears on a
+// served meal — only on the Safety Dashboard/logs).
 export function MealCard({ meal }: { meal: MealWithIngredients }) {
   const allergens = Array.from(
     new Set(meal.ingredients.flatMap((i) => i.allergen_tags ?? [])),
   ).sort();
+
+  const wasRegenerated = meal.safety_status === "blocked_regenerated";
 
   return (
     <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
@@ -28,7 +33,22 @@ export function MealCard({ meal }: { meal: MealWithIngredients }) {
         ) : null}
       </div>
 
-      <h3 className="mt-1.5 text-[15px] font-semibold leading-snug text-[#1F2933]">
+      {/* Safety badge — every served meal has cleared the guardrail. */}
+      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        <span className="inline-flex items-center gap-1 rounded-full bg-[#EAF1EC] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.04em] text-[#2F9E44]">
+          <span aria-hidden>✓</span> allergen-safe
+        </span>
+        {wasRegenerated ? (
+          <span
+            className="inline-flex items-center gap-1 rounded-full bg-[#F1F3F5] px-2 py-0.5 text-[10px] font-medium text-[#6B7280]"
+            title="The first suggestion for this slot was blocked by the guardrail and regenerated."
+          >
+            <span aria-hidden>↻</span> regenerated for safety
+          </span>
+        ) : null}
+      </div>
+
+      <h3 className="mt-2 text-[15px] font-semibold leading-snug text-[#1F2933]">
         {meal.name}
       </h3>
       {meal.description ? (
