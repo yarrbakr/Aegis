@@ -48,4 +48,19 @@
 **Fix applied:** n/a — built to spec. Note for prod: generation needs `GROQ_API_KEY` added to **Vercel** env (server-side secret) before it works on the live URL.
 
 ---
+
+### #4 — Phase 3 (trust layer) + Phase 4 (viz) + USD, in one go  ·  Phase 3–4  ·  2026-07-22
+**Prompt (summary or verbatim):**
+> "(1) use USD, update it. (2) complete phase 3 and phase 4 in one go, test it, check it matches all — and make sure it matches the requirement: *Create weekly meal plans based on the user preferences, budget and dietary requirements*." (User had added the Groq key.)
+
+**Output achieved:** Both phases built and **verified live**.
+- **USD:** `lib/format.ts` (`usd`/`usdApprox`) across cards/plan/dashboard/onboarding; prompt states costs are USD.
+- **Phase 3 (guardrail):** deterministic `lib/guardrails/allergen.ts` (`screenMeal` — defense-in-depth: tags **and** ingredient/meal names, synonym-expanded; allergen-aware to avoid nut-butter / plant-milk / GF-flour false positives) + `injection.ts` input filter. Route: input guardrail → generate → output guardrail (single-meal regenerate ≤3/meal, ≤12/plan; safe placeholder) → persist w/ `safety_status` → log `safety_events`. Mistral fallback in the LLM client. "✓ allergen-safe" badges.
+- **Phase 4 (viz):** dark **Safety Dashboard** (`safety_events`), **BudgetMeter**/**BudgetBar**/**NutritionDonut** (recharts) via `lib/plan-stats.ts`, Design.md fonts (Jakarta/Inter/JetBrains Mono).
+- **Tests:** `npm run test:guardrail` = **14/14 (100%)**; live generation = 21 screened / 21 passed / 0 blocked, `safety_events` read back, USD + charts + badges render, zero console errors.
+
+**Problems created:** (1) recharts 3 tooltip formatter types are stricter (`value` may be `undefined`). (2) `.ts`-extension imports in the guardrail test would break Next's typecheck. (3) Browser-pane clicks wouldn't reliably land on the generate button.
+**Fix applied:** (1) dropped explicit formatter param types + `Number()` coercion. (2) excluded `**/*.test.ts` from tsconfig; run the test via Node type-stripping. (3) tested the endpoint directly with `fetch()` from the page session (endpoint testing is Rules-endorsed), then rendered the resulting plan page.
+
+---
 *(Build prompts continue below as we go.)*

@@ -5,12 +5,12 @@
 ---
 
 ## 📍 Current status
-- **Phase:** **Phase 2 COMPLETE** ✅ (verified locally) — AI generation → validated → persisted → 7-day grid. Next: Phase 3 (the trust layer / guardrail).
-- **Currently working on:** wrapping Phase 2 — commit `feat/generate-plan`, merge to `main`, push (user approved), then verify live on Vercel (needs `GROQ_API_KEY` added to Vercel env).
+- **Phase:** **Phase 3 + Phase 4 COMPLETE** ✅ (verified live locally) — deterministic allergen guardrail + injection filter + Mistral fallback + safe badges (Phase 3), Safety Dashboard + budget/nutrition charts + design-system fonts (Phase 4), all in **USD**. Next: Phase 5 (eval harness) → Phase 6 (docs & submission).
+- **Currently working on:** merged `feat/phase-3-trust` → `main`; `feat/phase-4-viz` built & verified, ready to merge → `main`. **Push pending user permission** (this task did NOT authorize a push).
 - **Currently-edited file:** none.
-- **Live URLs:** **https://aegis-zeta-six.vercel.app** — auth + onboarding live. ⚠️ Generation won't work in prod until `GROQ_API_KEY` is added to **Vercel env vars** (server-side secret, NOT `NEXT_PUBLIC_`).
-- **Blockers:** to verify generation live, user must add `GROQ_API_KEY` to Vercel (Project → Settings → Environment Variables) and redeploy. Test accounts in Supabase: `aegisdemo2026@gmail.com`, `aegislive2027@gmail.com` (deletable).
-- **Git:** remote = `github.com/yarrbakr/Aegis`. `feat/generate-plan` = 4 code commits off `main`. Workflow: branch-per-feature, commit everything, ask before every push.
+- **Live URLs:** **https://aegis-zeta-six.vercel.app** — auth + onboarding live; generation live once `GROQ_API_KEY` is in Vercel (user said the key is added). Prod not yet re-verified with the Phase 3/4 code (not pushed yet).
+- **Blockers:** none local. To see Phase 3/4 in prod, merge Phase 4 → main and push (needs permission) → Vercel auto-deploys.
+- **Git:** remote = `github.com/yarrbakr/Aegis`. `main` = Phase 3 merged (7 code commits). `feat/phase-4-viz` = 2 code commits off `main`, not merged. Workflow: branch-per-feature, commit everything, ask before every push.
 
 ---
 
@@ -41,13 +41,16 @@
 - **Phase 1 (DB):** applied `schema.sql` + `policies.sql` to Supabase via the session pooler — 5 tables, **RLS ON on all**, 8 policies, 2 triggers (verified).
 - **Phase 1 (auth):** email/password auth (`@supabase/ssr`), `/login` (sign in/up + error surfacing), `/auth/signout`, protected `/dashboard`, `/onboarding` form → `profiles` (zod-validated, RLS-enforced), rebuilt landing. **Verified live locally:** signup→onboarding→dashboard persists; route protection works; custom-allergen merge works. Next 16 `middleware`→`proxy` migration done.
 - **Phase 2 (AI generation):** `POST /api/generate-plan` (Next.js route, `nodejs` runtime, `maxDuration=60`): auth → load profile → fixed prompt w/ prefs as data → Groq Llama 3.3 70B (JSON mode, temp 0.3) → **Zod-validate w/ one repair retry** → persist plan/meals/ingredients as the user (RLS). UI: `MealCard`/`PlanGrid` (7-day, horizontal-scroll), `GenerateButton` (loading + inline error), `/plan/[id]` (RLS read-back), dashboard view/regenerate. **Verified locally:** 1 click → 21 meals, total ~68.50 within 120 budget, model avoided the user's declared allergens (Peanuts/Shellfish/Kiwi), no console errors, `npm run build` green.
+- **Phase 3 (trust layer):** deterministic guardrail in `lib/guardrails/` — `allergen.ts` `screenMeal()` is **defense-in-depth** (tags + ingredient names + meal text, synonym-expanded; allergen-aware so dairy-free butters / plant milks / GF flours don't false-trip). Route wired: input guardrail (`injection.ts` `screenPreferences`) → generate → output guardrail (block + single-meal regenerate ≤3/meal, ≤12/plan; safe placeholder fallback) → persist with `safety_status` → log `meal_passed`/`meal_blocked`/`injection_detected` to `safety_events`. `lib/llm/groq.ts` gained an optional **Mistral fallback** (`MISTRAL_API_KEY`). `MealCard` shows **"✓ allergen-safe"**. Test `lib/guardrails/guardrails.test.ts` (`npm run test:guardrail`) = **14/14**. Currency → **USD** (`lib/format.ts`). **Verified live:** POST → 200, 21 screened / 21 passed / 0 blocked, `safety_events` read back, no console errors.
+- **Phase 4 (viz & taste):** `components/charts/SafetyDashboard.tsx` (dark console from `safety_events`) on plan (scoped) + dashboard (lifetime); `BudgetMeter`, `BudgetBar` (recharts, daily-budget line), `NutritionDonut` (recharts) via `lib/plan-stats.ts`; fonts Plus Jakarta Sans / Inter / JetBrains Mono (`app/layout.tsx` + `globals.css`). **Verified live:** console + charts render, USD everywhere, safe badges, no sideways scroll, zero console errors. Added dep: **recharts** (locked lib list).
 
 ## 🔨 In progress
-- Merging `feat/generate-plan` → `main`, pushing (user approved), then live prod verify (pending `GROQ_API_KEY` in Vercel env).
+- Merge `feat/phase-4-viz` → `main` (Phase 3 already merged), then push — **push needs user permission** (not given this task).
 
 ## ⏭️ Next up
-1. Add `GROQ_API_KEY` to Vercel env → redeploy → verify generation live in prod.
-2. **Phase 3 — the trust layer (headline):** deterministic allergen guardrail in `lib/guardrails/allergen.ts` (scan `ingredients.allergen_tags` vs `profiles.allergens`, block+regenerate ≤3, log `safety_events`) + injection filter (`injection.ts`) + Mistral fallback + "✓ allergen-safe" badges on cards. Hook point already marked in `app/api/generate-plan/route.ts` (right before persistence, `safety_status` field ready).
+1. Merge Phase 4 → main; get push permission → push → Vercel auto-deploy → verify Phase 3/4 live in prod (user says `GROQ_API_KEY` is in Vercel now).
+2. **Phase 5 — eval harness:** a TS/node script running `screenMeal` over many allergy profiles, asserting 0 unsafe pass, printing the **catch rate** (target 100%). `guardrails.test.ts` already pre-figures it (14/14). Save the output for the README.
+3. **Phase 6 — docs & submission:** `README.md` (decides-then-builds + live link + eval number), finalize Documentary/Prompt/Memory, final deploy check, email submission.
 
 ## 🐞 Open bugs / issues
 - none yet.
@@ -116,3 +119,14 @@
 - **Outputs & logs:** commits `8f0748f` (schemas+types), `0d2a376` (Groq client + prompt), `8297eaf` (route), `fab25c9` (UI) on `feat/generate-plan`. New files: `lib/llm/groq.ts`, `lib/prompt.ts`, `app/api/generate-plan/route.ts`, `components/meal/{MealCard,PlanGrid,GenerateButton}.tsx`, `app/plan/[id]/page.tsx`.
 - **Fix applied:** n/a.
 - **Next:** merge → `main`, push (approved), add `GROQ_API_KEY` to Vercel env → verify live, then Phase 3 (guardrail).
+
+### 2026-07-22 — Session 5: Phase 3 (trust layer) + Phase 4 (viz) + USD — built & verified live
+- **Attempted:** in one pass — switch currency to USD; build the whole deterministic guardrail (Phase 3) and the visualization/taste layer (Phase 4); test; ensure it matches the brief ("weekly meal plans based on preferences, budget and dietary requirements"). User said `GROQ_API_KEY` is added.
+- **Result:** ✅ Both phases done & verified.
+  - **USD:** `lib/format.ts` (`usd`/`usdApprox`) applied to cards, plan page, dashboard, onboarding ($ prefix + "USD" label); prompt tells the model costs are USD.
+  - **Phase 3:** `lib/guardrails/allergen.ts` (`screenMeal` — defense-in-depth: tags + names + meal text, synonym-expanded, allergen-aware false-positive handling) + `injection.ts` (`screenPreferences`). Route rewired: input guardrail → generate → output guardrail (single-meal regenerate ≤3/meal, ≤12/plan; safe placeholder) → persist w/ `safety_status` → log all decisions to `safety_events`. `groq.ts` → optional Mistral fallback. `MealCard` → "✓ allergen-safe" badge. Single-meal schema + regen prompt added.
+  - **Phase 4:** `SafetyDashboard` (dark console), `BudgetMeter`, `BudgetBar`, `NutritionDonut` (recharts) + `lib/plan-stats.ts`; surfaced on `/plan/[id]` (scoped) and `/dashboard` (lifetime); design-system fonts (Jakarta/Inter/JetBrains Mono).
+- **Errors & fixes:** (1) recharts 3 `Tooltip` formatter type is stricter (`value` may be `undefined`) → dropped explicit param annotations, coerce with `Number()`. (2) `.ts`-extension imports in `guardrails.test.ts` (needed by Node type-stripping) would break Next's typecheck → excluded `**/*.test.ts` in tsconfig. (3) Browser-pane clicks wouldn't land on the generate button (coordinate-space mismatch) → verified the endpoint directly via `fetch('/api/generate-plan')` from the page session (Rules.md endorses endpoint testing).
+- **Outputs & logs:** `npm run build` green; `npm run test:guardrail` = **14/14 (100%)**. Live: `POST /api/generate-plan → 200` (13.7s), **21 screened / 21 passed / 0 blocked**, plan `14ee5fd2…`, declared Peanuts/Shellfish/Kiwi absent, `safety_events` render in the Safety Dashboard, charts draw, USD everywhere, no console errors, no sideways scroll. Commits on `feat/phase-3-trust` (b2c97cf, 03d4a8a, 5e74ea9, d03c325, 3ad910f) merged to main (37830c2); `feat/phase-4-viz` (7c166b9, 5e1bd3e) not yet merged. Added dep: recharts@3.10.0. Note: 3 npm-audit advisories are in next/postcss/sharp (pre-existing framework deps), not recharts — left as-is near deadline.
+- **Fix applied:** see errors above.
+- **Next:** merge Phase 4 → main; **ask for push permission**; then Phase 5 eval + Phase 6 docs/submission.

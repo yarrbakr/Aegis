@@ -30,20 +30,20 @@ Time budget: ~7 hours. Phases are sized so that if we run out of time, we still 
 - [x] Plan view UI: 7-day grid of meal cards (name, cost, calories, macros, allergen tags); dashboard view/regenerate section.
 - **Done when:** clicking "Generate" returns a saved, displayed weekly plan. ✅ **Verified:** one click → 21 meals, total ~68.50 within the 120 budget, read back from Supabase under RLS, no console errors. (No guardrail yet — that's Phase 3.)
 
-## Phase 3 — The trust layer  *(the headline — do NOT skip or defer)*
+## Phase 3 — The trust layer ✅ DONE (verified live)  *(the headline)*
 **Goal: the app is provably safe.**
-- [ ] **Output guardrail** (`lib/guardrails/allergen.ts`): scan each meal's `ingredients.allergen_tags` against the user's `allergens`. Unsafe → block, log `meal_blocked`, regenerate (≤3). Safe → log `meal_passed`.
-- [ ] **Input guardrail** (`lib/guardrails/injection.ts`): screen free-text prefs for injection patterns; log `injection_detected`.
-- [ ] Visible **"✓ allergen-safe"** badge on every meal card.
-- [ ] Mistral fallback wired into the LLM client.
-- **Done when:** we can force an unsafe suggestion and watch it get blocked + regenerated, with an event logged.
+- [x] **Output guardrail** (`lib/guardrails/allergen.ts`): scan each meal against the user's `allergens` — **defense in depth**: not just `ingredients.allergen_tags` but ingredient names + meal text, synonym-expanded. Unsafe → block, log `meal_blocked`, regenerate (≤3, ≤12/plan), safe placeholder if still unsafe. Safe → log `meal_passed`. `safety_status` stamped per meal.
+- [x] **Input guardrail** (`lib/guardrails/injection.ts`): screen free-text prefs for injection patterns; drop from prompt; log `injection_detected`.
+- [x] Visible **"✓ allergen-safe"** badge on every meal card (+ "↻ regenerated for safety" note).
+- [x] Mistral fallback wired into the LLM client (optional — used if `MISTRAL_API_KEY` set).
+- **Done when:** we can force an unsafe suggestion and watch it get blocked + regenerated, with an event logged. ✅ **Verified:** `npm run test:guardrail` = **14/14 (100%)** incl. untagged-allergen catches; live generation = 21 meals screened, 21 passed, 0 unsafe served, `safety_events` logged & read back, no console errors. Also: currency switched to **USD** throughout.
 
-## Phase 4 — Visualization & taste
+## Phase 4 — Visualization & taste ✅ DONE (verified live)
 **Goal: it looks considered and the safety is *visible*.**
-- [ ] **Safety Dashboard** (from `safety_events`): generated / passed / blocked / injections caught / allergens screened. Console-styled.
-- [ ] **Budget bar chart** + budget meter. **Nutrition donut.**
-- [ ] Apply [Design.md](Design.md) fully: palette, fonts, spacing, empty/loading/error states.
-- **Done when:** the app matches the design spec and the Safety Dashboard tells the safety story at a glance.
+- [x] **Safety Dashboard** (from `safety_events`): meals screened / passed / blocked+regen / injections caught / allergens watched + live event log. Dark console-styled. On the plan page (scoped) and dashboard (lifetime).
+- [x] **Budget bar chart** (per-day cost + daily-budget line) + **budget meter** (spend vs weekly budget). **Nutrition donut** (weekly macros). Recharts, USD.
+- [x] Apply [Design.md](Design.md): palette + fonts (Plus Jakarta Sans / Inter / JetBrains Mono), empty/loading/error states.
+- **Done when:** the app matches the design spec and the Safety Dashboard tells the safety story at a glance. ✅ **Verified live:** console renders 21/21 + event log, charts draw, USD everywhere, safe badges on every card, no sideways page scroll, zero console errors.
 
 ## Phase 5 — Evidence & eval
 **Goal: a number that proves it works.**
