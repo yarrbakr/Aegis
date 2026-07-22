@@ -279,3 +279,4 @@
   - Provided the filled submission block (email → mudassar@qubitdynamics.ai; deadline 22 July 11:59 PM).
 - **Reminder (make-or-break for the evaluator):** `GROQ_API_KEY` (current) + `MISTRAL_API_KEY` must be in **Vercel** env, then redeploy + test one live generation.
 - **Next:** merge + push; user sets Vercel keys, does the live check, sends the email.
+- **Follow-up:** added a "The AI-first process — where to look" section to the README (a table of the `playbook/` files + Documentary/CLAUDE/commit history) so the evaluator knows where the process trail lives. Pushed.

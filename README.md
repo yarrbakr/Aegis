@@ -99,6 +99,24 @@ The build followed "design before generate": decide, record *why*, then build. T
 
 ---
 
+## The AI-first process — where to look
+
+This was built end-to-end with Claude Code, and the process is a graded artifact. The **[`playbook/`](playbook/)** folder is the full paper trail:
+
+| File | What it is |
+|---|---|
+| [`playbook/Memory.md`](playbook/Memory.md) | **Source of truth** — the locked-decision log + a dated, session-by-session build journal (what was attempted · result · errors · fix · next). |
+| [`playbook/PRD.md`](playbook/PRD.md) | Product requirements — problem, target users, features, non-goals. |
+| [`playbook/Architecture.md`](playbook/Architecture.md) | Stack rationale, app flow, and the data model. |
+| [`playbook/Design.md`](playbook/Design.md) | The design system — palette, type, and the D11 evolution. |
+| [`playbook/Phases.md`](playbook/Phases.md) | The phased build plan, checked off as each phase shipped. |
+| [`playbook/Rules.md`](playbook/Rules.md) | The working rules + safety boundaries the build held to. |
+| [`playbook/Prompt.md`](playbook/Prompt.md) | The build-prompt log: prompt → output → problems → fix. |
+
+Alongside it: **[`Documentary.md`](Documentary.md)** (the narrative build journey, phase by phase), **[`CLAUDE.md`](CLAUDE.md)** (the master instructions auto-loaded into every session), and the **commit history** itself — branch-per-feature, small conventional commits that each explain *what & why*.
+
+---
+
 ## Run it locally
 
 ```bash
