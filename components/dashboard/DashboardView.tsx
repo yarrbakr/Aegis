@@ -46,8 +46,8 @@ function StatCard({
         {icon}
       </span>
       <div className="mt-3 font-display text-2xl font-bold text-[#1F2933]">{value}</div>
-      <div className="text-xs font-medium text-[#6B7280]">{label}</div>
-      {sub ? <div className="mt-0.5 text-[11px] text-[#9CA3AF]">{sub}</div> : null}
+      <div className="text-[13px] font-semibold text-[#3D4653]">{label}</div>
+      {sub ? <div className="mt-0.5 text-xs font-medium text-[#6B7280]">{sub}</div> : null}
     </div>
   );
 }

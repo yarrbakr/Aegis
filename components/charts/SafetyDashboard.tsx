@@ -106,7 +106,7 @@ function Stat({
       <div className={`font-display text-2xl font-bold leading-none ${fg}`}>
         {value}
       </div>
-      <div className="mt-1.5 text-[10px] font-medium uppercase tracking-[0.06em] text-[#6B7280]">
+      <div className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#4B5563]">
         {label}
       </div>
     </div>
