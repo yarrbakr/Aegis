@@ -133,6 +133,57 @@ check(
   ).safe,
 );
 
+console.log("\n── 'FREE-OF' items must pass, but real allergens still block ──");
+
+// "gluten-free bread" is safe for a gluten allergy (its whole point).
+check(
+  "gluten-free bread passes for a gluten allergy",
+  screenMeal(
+    meal({
+      name: "Avocado on gluten-free bread",
+      ingredients: [{ name: "Gluten-free bread", allergen_tags: [] }],
+    }),
+    ["gluten"],
+  ).safe,
+);
+
+// "dairy-free cheese" is safe for a milk allergy.
+check(
+  "dairy-free cheese passes for a milk allergy",
+  screenMeal(
+    meal({
+      name: "Veggie melt",
+      ingredients: [{ name: "Dairy-free cheese", allergen_tags: [] }],
+    }),
+    ["milk"],
+  ).safe,
+);
+
+// ...but a REAL allergen elsewhere in the same meal is still caught.
+check(
+  "regular bread is still blocked for a gluten allergy",
+  !screenMeal(
+    meal({
+      name: "Toast",
+      ingredients: [{ name: "White bread", allergen_tags: [] }],
+    }),
+    ["gluten"],
+  ).safe,
+);
+check(
+  "gluten-free bun + regular pasta is still blocked (per-ingredient)",
+  !screenMeal(
+    meal({
+      name: "Combo plate",
+      ingredients: [
+        { name: "Gluten-free bun", allergen_tags: [] },
+        { name: "Wheat pasta", allergen_tags: [] },
+      ],
+    }),
+    ["gluten"],
+  ).safe,
+);
+
 console.log("\n── BLOCK → REGENERATE cycle (deterministic) ──");
 {
   const declared = ["shellfish"];
