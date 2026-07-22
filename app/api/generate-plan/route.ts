@@ -20,8 +20,10 @@ import {
   buildPlanMessages,
   buildRepairMessages,
   buildMealRegenMessages,
+  buildDislikeRegenMessages,
   type PromptPrefs,
 } from "@/lib/prompt";
+import { findDislikedTerm } from "@/lib/taste";
 import {
   generatedPlanSchema,
   generatedMealSchema,
@@ -51,6 +53,11 @@ type PendingEvent = {
 // for a single plan (unsafe meals beyond the budget get a safe placeholder).
 const MAX_REGEN_PER_MEAL = 3;
 const MAX_REGEN_PER_PLAN = 12;
+
+// Best-effort taste re-rolls for disliked foods (NOT safety — bounded tighter and
+// never blocks a plan; a dislike that survives is kept, since it's not unsafe).
+const MAX_DISLIKE_REROLL_PER_MEAL = 2;
+const MAX_DISLIKE_REROLL_PER_PLAN = 6;
 
 // ── Validation helpers ──────────────────────────────────────────────────────
 
@@ -247,6 +254,75 @@ async function enforceSafety(
   return { meals: out, events };
 }
 
+// Re-roll one disliked meal for a taste replacement, pinned to its slot.
+async function regenerateForDislike(
+  profile: Profile,
+  slot: GeneratedMeal,
+  dislikedTerm: string,
+  promptPrefs: PromptPrefs,
+): Promise<GeneratedMeal | null> {
+  const messages = buildDislikeRegenMessages(profile, slot, dislikedTerm, promptPrefs);
+  const raw = await chatJSON(messages);
+  const meal = validateMeal(raw);
+  if (!meal) return null;
+  return { ...meal, day_of_week: slot.day_of_week, meal_type: slot.meal_type };
+}
+
+// BEST-EFFORT TASTE PASS (NOT safety). Runs on the RAW generated meals BEFORE the
+// safety guardrail, so the guardrail stays the authoritative last word (and its
+// audit log names the final meals). Deterministically detect disliked foods and
+// re-roll those meals; only accept a replacement that is actually dislike-free —
+// otherwise keep the original. Every meal here is still screened + regenerated
+// for allergens by enforceSafety afterward, so taste is NEVER traded for safety.
+async function honorDislikes(
+  profile: Profile,
+  meals: GeneratedMeal[],
+  promptPrefs: PromptPrefs,
+): Promise<GeneratedMeal[]> {
+  const dislikes = promptPrefs.dislikes ?? [];
+  if (dislikes.length === 0) return meals;
+
+  const out: GeneratedMeal[] = [];
+  let planRerolls = 0;
+
+  for (const meal of meals) {
+    let chosen = meal;
+
+    let tries = 0;
+    while (
+      findDislikedTerm(chosen, dislikes) &&
+      tries < MAX_DISLIKE_REROLL_PER_MEAL &&
+      planRerolls < MAX_DISLIKE_REROLL_PER_PLAN
+    ) {
+      tries++;
+      planRerolls++;
+      const term = findDislikedTerm(chosen, dislikes)!;
+      const replacement = await regenerateForDislike(
+        profile,
+        chosen,
+        term,
+        promptPrefs,
+      ).catch(() => null);
+      if (!replacement) break;
+      // Only swap in a replacement that actually clears the dislike; never end on
+      // an equally-disliked meal. (Allergen safety is enforced later regardless.)
+      if (!findDislikedTerm(replacement, dislikes)) {
+        chosen = replacement;
+        break;
+      }
+    }
+
+    out.push(chosen);
+  }
+
+  if (planRerolls > 0) {
+    console.log(
+      `[generate-plan] taste pass: re-rolled ${planRerolls} meal(s) to avoid disliked foods (${dislikes.join(", ")}).`,
+    );
+  }
+  return out;
+}
+
 // ── Misc ────────────────────────────────────────────────────────────────────
 
 // Monday of the current week, as YYYY-MM-DD (matches meals' 0=Monday indexing).
@@ -311,10 +387,26 @@ export async function POST() {
     );
   }
 
-  // 3) OUTPUT GUARDRAIL — screen + regenerate. Never serve an unsafe meal.
+  // 3) BEST-EFFORT TASTE PASS (not safety) — re-roll raw meals that
+  //    deterministically contain a disliked food. Runs BEFORE the guardrail so
+  //    the guardrail is the authoritative last word. Never fatal: on any error we
+  //    fall back to the model's meals and let the safety pass do its job.
+  let tastedMeals = plan.meals;
+  try {
+    tastedMeals = await honorDislikes(profile, plan.meals, promptPrefs);
+  } catch (err) {
+    console.error(
+      "[generate-plan] dislike pass failed (continuing to safety):",
+      err instanceof Error ? err.message : String(err),
+    );
+  }
+
+  // 4) OUTPUT GUARDRAIL — screen + regenerate. Never serve an unsafe meal. This is
+  //    the last word: any allergen a taste re-roll might have introduced is caught
+  //    here, and the audit events name the final meals.
   let safeMeals: SafeMeal[];
   try {
-    const enforced = await enforceSafety(profile, plan.meals, promptPrefs);
+    const enforced = await enforceSafety(profile, tastedMeals, promptPrefs);
     safeMeals = enforced.meals;
     events.push(...enforced.events);
   } catch (err) {
@@ -326,7 +418,7 @@ export async function POST() {
     );
   }
 
-  // 4) Persist plan → meals → ingredients (RLS-enforced via the user's session).
+  // 5) Persist plan → meals → ingredients (RLS-enforced via the user's session).
   const totalCost = safeMeals.reduce((sum, m) => sum + (m.cost ?? 0), 0);
 
   const { data: planRow, error: planErr } = await supabase
@@ -407,7 +499,7 @@ export async function POST() {
     }
   }
 
-  // 5) Persist the audit trail. Best-effort: a logging failure must not sink an
+  // 6) Persist the audit trail. Best-effort: a logging failure must not sink an
   // otherwise-safe, saved plan — but we surface it in the server logs.
   if (events.length > 0) {
     const eventRows = events.map((e) => ({

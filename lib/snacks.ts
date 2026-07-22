@@ -6,6 +6,7 @@
 // keep on a second surface, with zero extra model calls.
 
 import { screenMeal, type ScreenableMeal } from "@/lib/guardrails/allergen";
+import { findDislikedTerm } from "@/lib/taste";
 
 export type Snack = {
   name: string;
@@ -123,18 +124,11 @@ const SNACKS: Snack[] = [
   },
 ];
 
-// A snack is "disliked" if any disliked term appears in its name or an
-// ingredient name. Taste-only filtering — applied AFTER the safety screen, so it
+// A snack is "disliked" if any disliked term appears in its name or ingredients.
+// Taste-only filtering (shared matcher) — applied AFTER the safety screen, so it
 // can never let an unsafe snack through, only hide a safe-but-unwanted one.
 function isDisliked(snack: Snack, dislikes: string[]): boolean {
-  if (dislikes.length === 0) return false;
-  const hay = [snack.name, ...snack.ingredients.map((i) => i.name)]
-    .join(" ")
-    .toLowerCase();
-  return dislikes.some((d) => {
-    const term = d.trim().toLowerCase();
-    return term.length > 0 && hay.includes(term);
-  });
+  return findDislikedTerm(snack, dislikes) !== null;
 }
 
 /**

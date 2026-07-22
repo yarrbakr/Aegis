@@ -9,6 +9,7 @@
 
 import { screenMeal, type ScreenableMeal } from "./allergen.ts";
 import { screenPreferences } from "./injection.ts";
+import { findDislikedTerm } from "../taste.ts";
 
 let passed = 0;
 let failed = 0;
@@ -230,6 +231,40 @@ console.log("\n── INPUT GUARDRAIL: taste prefs are screened too ──");
   );
   check("clean dislike 'mushrooms' is kept for the prompt", promptDislikes.includes("mushrooms"));
   check("taste-pref injection is recorded as a finding", findings.length === 1);
+}
+
+console.log("\n── TASTE (best-effort, NOT safety): disliked-food detector ──");
+{
+  // The real bug: a disliked food surfaced in a plan. The deterministic detector
+  // that drives the re-roll must catch it by name and by ingredient.
+  const mealItem = {
+    name: "Grilled Portobello Mushrooms with Quinoa",
+    description: "Grilled portobello mushrooms served with quinoa",
+    ingredients: [{ name: "Portobello mushrooms" }, { name: "Quinoa" }],
+  };
+  check(
+    "disliked 'mushrooms' is detected in the meal name",
+    findDislikedTerm(mealItem, ["mushrooms"]) === "mushrooms",
+  );
+  check(
+    "singular dislike 'mushroom' still matches plural (forgiving)",
+    findDislikedTerm(mealItem, ["mushroom"]) === "mushroom",
+  );
+  check(
+    "detects a dislike that only appears in an ingredient",
+    findDislikedTerm(
+      { name: "Garden salad", ingredients: [{ name: "Kalamata olives" }] },
+      ["olives"],
+    ) === "olives",
+  );
+  check(
+    "a meal with no disliked food returns null",
+    findDislikedTerm(
+      { name: "Grilled chicken & rice", ingredients: [{ name: "Chicken" }, { name: "Rice" }] },
+      ["mushrooms", "olives"],
+    ) === null,
+  );
+  check("no dislikes declared → null", findDislikedTerm(mealItem, []) === null);
 }
 
 const total = passed + failed;
