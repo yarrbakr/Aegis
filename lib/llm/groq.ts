@@ -11,8 +11,12 @@ const MISTRAL_URL = "https://api.mistral.ai/v1/chat/completions";
 
 // Primary model (D4). Groq's current production Llama 3.3 70B slug.
 export const GROQ_MODEL = "llama-3.3-70b-versatile";
-// Fallback model. Mistral's flagship, also JSON-mode capable.
-export const MISTRAL_MODEL = "mistral-large-latest";
+// Fallback model. Mistral's small model, also JSON-mode capable. Chosen over
+// mistral-large for the fallback because SPEED matters here: a full plan on
+// mistral-large ran ~56s, dangerously close to Vercel's 60s function limit
+// (a follow-up regen would time out). Small is much faster — a dependable
+// degraded-mode backstop beats a slightly better plan that times out.
+export const MISTRAL_MODEL = "mistral-small-latest";
 
 export type ChatMessage = {
   role: "system" | "user" | "assistant";
