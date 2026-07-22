@@ -28,4 +28,14 @@
 **Fix applied:** extracted the class-notes PDF text via `pypdf` instead of image render.
 
 ---
-*(Build prompts from Phase 0 onward get appended below as we go.)*
+
+### #2 — Phase 0 skeleton (scaffold + backend + git)  ·  Phase 0  ·  2026-07-22
+**Prompt (summary):**
+> User provided the GitHub repo (`github.com/yarrbakr/Aegis`) and said go. Scaffold the Next.js app, build the minimal FastAPI `/health` backend, set up `.gitignore` + `.env.example`, and commit everything in small commits on the right branches (branch-per-feature; don't push).
+
+**Output achieved:** Next.js 16.2.11 + TS + Tailwind scaffolded at repo root (`npm run build` passes). FastAPI `/backend/main.py` with `/health` → 200 (smoke-tested via TestClient). `.gitignore`, `.env.example` (root + backend), pinned `requirements.txt`. `git init`, remote set, 4 commits on `feat/phase-0-skeleton`, merged to `main` via `--no-ff`. Nothing pushed (awaiting permission).
+**Problems created:** (1) `create-next-app` won't use a folder name starting with `_`. (2) Windows "resource busy" on temp-folder delete. (3) guessed `openai==1.59.0` pin didn't exist on PyPI.
+**Fix applied:** (1) used `aegis-tmp`, moved files to root, deleted temp. (2) deleted via PowerShell `Remove-Item -Recurse -Force`. (3) installed with capped ranges, then re-pinned the exact resolved versions.
+
+---
+*(Build prompts continue below as we go.)*

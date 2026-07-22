@@ -56,7 +56,13 @@ All of it is recorded in [Architecture.md](playbook/Architecture.md), [PRD.md](p
 Following Armghan's loop — **Describe → Generate → Run → Observe → Refine** — across phases. This section grows as we build; each phase records what was intended, what actually happened, and what we learned.
 
 ### Phase 0 — Setup & skeleton deploy
-_pending_
+**Intended:** stand up an *empty but live* pipeline before any feature — Next.js on Vercel, FastAPI on Render, Supabase ready — so the risky part (deployment) is proven first.
+
+**What actually happened (local half, done):** scaffolded Next.js 16 + TypeScript + Tailwind at the repo root (`npm run build` passes cleanly) and a minimal FastAPI backend whose `/health` endpoint returns `200 {status: ok}` — smoke-tested locally before committing. Set up `.gitignore` and `.env.example` templates (no real secrets ever touch git), then committed in small, labelled steps on a `feat/phase-0-skeleton` branch and merged to `main` once it built — the branch-per-feature workflow, visible in the history.
+
+**Learned / decided:** pin backend deps to versions actually resolved locally so Render reproduces the same build (a guessed pin, `openai==1.59.0`, didn't exist — caught it before it ever reached the cloud). Keep the Python service in `/backend`, deliberately not `/api`, so Vercel doesn't mistake it for serverless functions.
+
+**Next (cloud half):** push to GitHub, connect Vercel (frontend) and Render (backend), create the Supabase project, and wire env vars — then confirm the deployed frontend can reach the deployed `/health`.
 
 ### Phase 1 — Auth & data foundation
 _pending_

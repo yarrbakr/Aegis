@@ -5,12 +5,12 @@
 ---
 
 ## 📍 Current status
-- **Phase:** Phase 0 not started — playbook/foundation just created.
-- **Currently working on:** Foundation docs complete. Next action = begin Phase 0 (setup & skeleton deploy) *when the user says go*.
-- **Currently-edited file:** none (planning stage).
-- **Live URLs:** none yet (Vercel / Render pending Phase 0).
-- **Blockers:** waiting on the user's GitHub repo link before Phase 0 remote setup.
-- **Git:** repo not yet created/linked. Workflow locked (D9): branch-per-feature, commit everything, **ask before every push**. No commits made yet.
+- **Phase:** Phase 0 *in progress* — local skeleton complete & verified; cloud deploy pending the user's accounts.
+- **Currently working on:** Deploy handoff (push → Vercel → Render → Supabase). Awaiting push permission + the user's account setup.
+- **Currently-edited file:** none (between steps).
+- **Live URLs:** none yet (Vercel / Render pending).
+- **Blockers:** (1) need the user's OK to push to origin; (2) need the user to create the Supabase project and connect Vercel + Render.
+- **Git:** initialized; remote = `github.com/yarrbakr/Aegis`. 5 commits on `main` (incl. `--no-ff` merge of `feat/phase-0-skeleton`). **Nothing pushed yet** — waiting on permission (D9). Workflow: branch-per-feature, commit everything, **ask before every push**.
 
 ---
 
@@ -35,13 +35,14 @@
 - Locked name, stack, DB schema, design direction.
 - Created playbook: PRD, Architecture, Rules, Phases, Design, Memory, Prompt.
 - Created CLAUDE.md + Documentary.md.
+- **Phase 0 (local):** scaffolded Next.js 16 + TS + Tailwind at repo root (`npm run build` passes); FastAPI `/backend` with `/health` (smoke-tested → 200); `.gitignore` + `.env.example` (frontend + backend); `git init`, remote set, 4 clean commits + merge to `main`.
 
 ## 🔨 In progress
-- Nothing yet — awaiting go to start Phase 0.
+- **Phase 0 (cloud deploy):** push to GitHub (pending permission) → deploy Next.js to Vercel → deploy FastAPI to Render → create Supabase project → wire env vars.
 
 ## ⏭️ Next up
-1. **Phase 0** — init Next.js, GitHub repo, Supabase project, FastAPI `/health`, deploy skeleton to Vercel + Render, wire env vars.
-2. Then Phase 1 (auth + preferences).
+1. **Finish Phase 0 deploy:** push → Vercel (live URL) → Render (`/health` 200) → Supabase project + keys → env vars → confirm the frontend can reach `/health`.
+2. Then **Phase 1** (auth + preferences: run schema/policies, Supabase Auth, onboarding form).
 
 ## 🐞 Open bugs / issues
 - none yet.
@@ -67,3 +68,10 @@
 - **Errors:** none.
 - **Outputs:** repo description delivered to user (About one-liner + topics + submission blurb).
 - **Next:** User provides the GitHub repo link → begin Phase 0.
+
+### 2026-07-22 — Session 2: Phase 0 local skeleton
+- **Attempted:** Start Phase 0 after receiving the repo link (`github.com/yarrbakr/Aegis`). Scaffold Next.js, build the FastAPI `/health` skeleton, set up git + commits.
+- **Result:** Local skeleton complete & verified. Next.js **16.2.11** (`npm run build` ✓, "Compiled successfully in 9.4s"). FastAPI `/health` → **200** `{status: ok, service: aegis-api}` (TestClient smoke test). `.gitignore`, `.env.example` (root + backend). Repo initialized, remote set, commits on `feat/phase-0-skeleton`, merged into `main` via `--no-ff`.
+- **Errors & fixes:** (1) `create-next-app` rejects folder names starting with `_` → scaffolded into `aegis-tmp`, moved files to root, deleted temp. (2) temp folder `rm` hit "Device or resource busy" (Windows handle) → removed via PowerShell. (3) pinned `openai==1.59.0` didn't exist on the index → switched to capped ranges, installed, then re-pinned exact resolved versions (openai 2.46.0, fastapi 0.139.2, uvicorn 0.51.0, pydantic 2.13.4, httpx 0.28.1, python-dotenv 1.2.2, pytest 8.4.2).
+- **Outputs & logs:** commits `fa90c87` (foundation) → `f2905fd` (Next scaffold) → `af6fc52` (FastAPI) → `e7aa8b6` (env examples) → `2c74370` (merge). Nothing pushed.
+- **Next:** Get push permission; guide the user through Vercel + Render + Supabase; wire env vars; confirm frontend → `/health`.
