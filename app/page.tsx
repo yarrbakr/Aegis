@@ -29,9 +29,7 @@ export default function Home() {
         </SoftBlurIn>
 
         <p className="mt-6 max-w-xl text-lg text-[#4B5563]">
-          The meal planner that can’t feed you what you’re allergic to — every
-          AI-generated meal passes a deterministic allergen guardrail before you
-          ever see it. Unsafe suggestions are blocked, logged, and regenerated.
+          AI plans your week; a safety shield keeps your allergens off the menu.
         </p>
         <Link
           href="/login"
