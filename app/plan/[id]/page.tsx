@@ -3,7 +3,17 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PlanGrid } from "@/components/meal/PlanGrid";
 import { GenerateButton } from "@/components/meal/GenerateButton";
+import { SafetyDashboard } from "@/components/charts/SafetyDashboard";
+import { BudgetBar } from "@/components/charts/BudgetBar";
+import { BudgetMeter } from "@/components/charts/BudgetMeter";
+import { NutritionDonut } from "@/components/charts/NutritionDonut";
 import { usd, usdApprox } from "@/lib/format";
+import {
+  dailyCosts,
+  weeklyMacros,
+  safetyStats,
+  type SafetyEventRow,
+} from "@/lib/plan-stats";
 import type { MealPlan, MealWithIngredients, Profile } from "@/lib/types";
 
 export default async function PlanPage({
@@ -44,9 +54,23 @@ export default async function PlanPage({
     .maybeSingle();
   const profile = profileRow as Pick<Profile, "weekly_budget" | "allergens"> | null;
 
+  // This plan's safety audit trail — powers the Safety Dashboard.
+  const { data: eventRows } = await supabase
+    .from("safety_events")
+    .select("event_type, allergen, detail, created_at")
+    .eq("plan_id", id)
+    .order("created_at", { ascending: false });
+  const events = (eventRows ?? []) as SafetyEventRow[];
+
   const totalCost = plan.total_cost ?? 0;
   const budget = profile?.weekly_budget ?? null;
   const overBudget = budget != null && totalCost > budget;
+  const allergens = profile?.allergens ?? [];
+
+  const stats = safetyStats(events);
+  const costs = dailyCosts(meals);
+  const macros = weeklyMacros(meals);
+  const dailyBudget = budget != null ? Number((budget / 7).toFixed(2)) : null;
 
   return (
     <main className="min-h-dvh bg-[#F8F9FA] px-4 py-8 text-[#1F2933]">
@@ -72,8 +96,7 @@ export default async function PlanPage({
               {budget != null ? (
                 <>
                   {" "}
-                  of{" "}
-                  <span className="font-mono">{usd(budget)}</span> budget
+                  of <span className="font-mono">{usd(budget)}</span> budget
                   {overBudget ? (
                     <span className="ml-1 text-[#E03131]">(over budget)</span>
                   ) : (
@@ -91,7 +114,48 @@ export default async function PlanPage({
             This plan has no meals. Try generating a new one.
           </div>
         ) : (
-          <PlanGrid meals={meals} />
+          <>
+            {/* Safety story first — the guardrail is the product. */}
+            <div className="mb-6">
+              <SafetyDashboard
+                title="This plan was screened for your allergens"
+                subtitle="Every meal below passed a deterministic allergen check before it was saved."
+                served={meals.length}
+                blocked={stats.blocked}
+                injections={stats.injections}
+                allergensWatched={allergens}
+                events={events}
+              />
+            </div>
+
+            {/* Budget + nutrition insights. */}
+            <div className="mb-6 grid gap-4 lg:grid-cols-3">
+              <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
+                <h2 className="text-sm font-semibold">Budget</h2>
+                <div className="mt-3">
+                  <BudgetMeter total={totalCost} budget={budget} />
+                </div>
+              </div>
+              <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5 lg:col-span-1">
+                <h2 className="text-sm font-semibold">Cost by day</h2>
+                <div className="mt-2">
+                  <BudgetBar data={costs} dailyBudget={dailyBudget} />
+                </div>
+              </div>
+              <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
+                <h2 className="text-sm font-semibold">Weekly nutrition</h2>
+                <div className="mt-2">
+                  <NutritionDonut
+                    protein={macros.protein}
+                    carbs={macros.carbs}
+                    fat={macros.fat}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <PlanGrid meals={meals} />
+          </>
         )}
 
         <p className="mt-8 text-xs text-[#6B7280]">

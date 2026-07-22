@@ -92,11 +92,27 @@ Following Armghan's loop — **Describe → Generate → Run → Observe → Ref
 
 **Next:** Phase 3, the headline — the deterministic allergen guardrail that scans every ingredient against the user's declared allergens, blocks and regenerates anything unsafe, logs the decision to `safety_events`, and puts a visible "✓ allergen-safe" badge on every meal. (One prod to-do: the live site needs `GROQ_API_KEY` in Vercel's env before generation works there — it's a server-side secret, so it never went in the browser-exposed `NEXT_PUBLIC_` vars.)
 
-### Phase 3 — The trust layer
-_pending_
+### Phase 3 — The trust layer (the headline)
+**Intended:** make the safety claim *true and provable* — a deterministic gate that scans every generated meal against the user's declared allergens, blocks and regenerates anything unsafe, records every decision, and never lets an unsafe meal reach the screen.
+
+**What happened:** built the guardrail as **pure TypeScript** in `lib/guardrails/` — never an LLM "is this safe?" prompt (a security company doesn't let the model grade its own work). The design decision that matters most: **it does not trust the model's own allergen tags.** The same model that picks an ingredient also tags it, so a missed tag would sail straight through. So `screenMeal()` checks three layers — the model's `allergen_tags`, then the ingredient *names*, then the meal name/description — each expanded through a synonym map, so declaring "milk" also catches cheese/whey/casein/butter and "shellfish" catches shrimp/crab/prawn. It's allergen-aware enough to *not* nuisance-block dairy-free nut butters, plant milks, or gluten-free flours. False positives are cheap (regenerate); a false negative is the one thing that must never ship, so when unsure it flags.
+
+The route now runs the full pipeline from Architecture.md: **input guardrail** (screen the user's free-text prefs for prompt-injection, drop the offending text, log it) → generate → **output guardrail** (screen all 21 meals; each unsafe one is blocked and regenerated a slot at a time, ≤3 tries, with a deterministic safe placeholder if the model still can't comply) → persist, stamping each meal `passed` or `blocked_regenerated`. **Every decision is written to `safety_events`** — the audit trail *is* the evidence. Mistral is wired as an automatic fallback behind Groq (reliability story), and every served meal now carries a green **"✓ allergen-safe"** badge.
+
+**These map directly onto CyberGen's product suite:** the allergen block *is* **Guardrails**, the injection filter *is* **Cortex Shield**, and the `safety_events` log feeds **Argus**.
+
+**Verified, not assumed — twice.** First, a 14-case guardrail test (`npm run test:guardrail`, plain Node type-stripping, no framework) forces unsafe meals and asserts they're caught — including the money cases where the allergen is present but **untagged** (untagged cheddar for a milk allergy; untagged peanut butter), plus safe meals passing and dairy-free butters *not* false-tripping: **14/14, 100%.** Then live in the browser: one generation → `200`, **21 meals screened, 21 passed, 0 unsafe served**, the household's declared peanuts/shellfish/kiwi nowhere to be found, and the `safety_events` log reading back meal-by-meal. Evidence over hype.
+
+**Also this phase:** switched all money to **USD** (a single `usd()` formatter, and the model is told costs are in dollars) — directly serving the brief's "based on budget."
 
 ### Phase 4 — Visualization & taste
-_pending_
+**Intended:** make the safety *visible* and the app feel considered — the design is heavily weighted by the evaluator, and a safety layer you can't see might as well not exist.
+
+**What happened:** built the **Safety Dashboard** as a dark "security console" (Design.md's deliberate contrast to the fresh-and-clean app) — a live green pulse, mono metrics (meals screened / passed / blocked+regenerated / injections caught), the allergens actively watched, and a scrolling event log straight from `safety_events`. It sits at the top of every plan (scoped to that plan) and on the dashboard (lifetime record). This is the screenshot that tells the whole trust story at a glance — pure **Argus** energy.
+
+Alongside it, the numbers the brief actually asks for: a **budget meter** (spend vs weekly budget, green within / coral over) and a **per-day cost bar chart** with a daily-budget reference line, plus a **weekly-nutrition donut** — all Recharts, all in USD. Applied the Design.md type system for real: **Plus Jakarta Sans** (display), **Inter** (body), **JetBrains Mono** (the console). Every data view has an empty, loading, and error state.
+
+**Verified, not assumed:** live browser pass — the console renders with 21/21 screened and a real event log, the charts draw, USD is everywhere, every card shows its safe badge, and the page never scrolls sideways (Design.md's grid rule). Zero console errors. Together Phases 3–4 make Aegis demonstrably *"weekly meal plans based on the user's preferences, budget, and dietary requirements"* — with the dietary requirement enforced by code, not hope.
 
 ### Phase 5 — Evidence & eval
 _pending_

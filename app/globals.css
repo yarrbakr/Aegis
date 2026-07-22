@@ -1,26 +1,34 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8f9fa; /* canvas — Design.md 60% */
+  --foreground: #1f2933; /* ink */
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Fonts (Design.md §2). font-sans = Inter, font-mono = JetBrains Mono,
+     and a display family for headings. Fallbacks keep text visible pre-load. */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", monospace;
+  --font-display: var(--font-jakarta), var(--font-inter), sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+}
+
+/* Headings use the display family (Plus Jakarta Sans). */
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+}
+
+/* Utility for opting other elements into the display font. */
+.font-display {
+  font-family: var(--font-display);
 }
