@@ -6,11 +6,11 @@
 
 ## 📍 Current status
 - **Phase:** **Phases 3, 4, 5 COMPLETE** ✅ + **5 UX/safety fixes** from the user's live testing (see Session 6). Only **Phase 6 (docs/README + submission)** remains — after the user's design pass.
-- **Currently working on:** P3/P4/P5 merged to `main`; `fix/ux-and-safety-log` built & verified, ready to merge → `main`. **PUSH IS ON HOLD by the user** — they have major design/color + interactive changes to make first, THEN we push (which updates the live site).
+- **Currently working on:** **PUSHED** — user authorized the push (2026-07-22). `main` → `origin/main` (19 commits: P3+P4+P5+Session-6 fixes) + all 4 feature branches. `main` now in sync with origin (0 ahead). Vercel auto-deploy triggered. **Next: the design/interactive pass** (user's call), then Phase 6.
 - **Currently-edited file:** none.
-- **Live URLs:** **https://aegis-zeta-six.vercel.app** — still the OLD Phase 2 build (nothing pushed since). Local dev has all of P3/P4/P5.
-- **Blockers:** none. Deliberately holding the push per user until their design/interactive changes land.
-- **Git:** remote = `github.com/yarrbakr/Aegis`. `main` = P3 + P4 merged (~10 commits ahead of origin, unpushed). `feat/phase-5-eval` = 1 code commit off `main`, not merged. Workflow: branch-per-feature, commit everything, ask before every push.
+- **Live URLs:** **https://aegis-zeta-six.vercel.app** — now deploying the FULL app (P3 guardrail + P4 dashboard/charts + USD + Session-6 fixes). Generation needs `GROQ_API_KEY` in Vercel (user says it's set). Confirm the Vercel build went green + spot-check live before relying on it.
+- **Blockers:** none.
+- **Git:** remote = `github.com/yarrbakr/Aegis`. `origin/main` = `7bc433a` (everything through Session 6). All feature branches pushed. Workflow: branch-per-feature, commit everything, ask before every push.
 - **Eval number (for README):** `npm run eval` → **236 meals / 14 profiles → 100.0% catch rate, 100.0% specificity** (saved in `lib/eval/RESULTS.md`).
 
 ---
