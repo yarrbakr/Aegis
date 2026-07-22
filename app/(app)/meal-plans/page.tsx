@@ -5,9 +5,8 @@ import { WeekView } from "@/components/meal/WeekView";
 import { GenerateButton } from "@/components/meal/GenerateButton";
 import { BudgetMeter } from "@/components/charts/BudgetMeter";
 import { BudgetBar } from "@/components/charts/BudgetBar";
-import { NutritionDonut } from "@/components/charts/NutritionDonut";
 import { usd, usdApprox } from "@/lib/format";
-import { dailyCosts, weeklyMacros } from "@/lib/plan-stats";
+import { dailyCosts } from "@/lib/plan-stats";
 import type { MealPlan, MealWithIngredients, Profile } from "@/lib/types";
 
 // "Meal Plans" nav destination — the detailed weekly diet plan (the current
@@ -54,7 +53,6 @@ export default async function MealPlansPage() {
   const budget = profile?.weekly_budget ?? null;
   const overBudget = budget != null && totalCost > budget;
   const costs = dailyCosts(meals);
-  const macros = weeklyMacros(meals);
   const dailyBudget = budget != null ? Number((budget / 7).toFixed(2)) : null;
 
   return (
@@ -102,7 +100,7 @@ export default async function MealPlansPage() {
         </div>
       ) : (
         <>
-          <div className="mt-6 grid gap-4 lg:grid-cols-3">
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-[#E7E8EC] bg-white p-5">
               <h2 className="text-sm font-semibold text-[#1F2933]">Budget</h2>
               <div className="mt-3">
@@ -115,21 +113,9 @@ export default async function MealPlansPage() {
                 <BudgetBar data={costs} dailyBudget={dailyBudget} />
               </div>
             </div>
-            <div className="rounded-2xl border border-[#E7E8EC] bg-white p-5">
-              <h2 className="text-sm font-semibold text-[#1F2933]">
-                Weekly nutrition
-              </h2>
-              <div className="mt-2">
-                <NutritionDonut
-                  protein={macros.protein}
-                  carbs={macros.carbs}
-                  fat={macros.fat}
-                />
-              </div>
-            </div>
           </div>
 
-          <div className="mt-6 rounded-2xl border border-[#E7E8EC] bg-white p-5">
+          <div className="mt-6">
             <WeekView meals={meals} />
           </div>
 

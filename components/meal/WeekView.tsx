@@ -4,11 +4,12 @@ import { useState } from "react";
 import type { MealWithIngredients } from "@/lib/types";
 import { DAY_NAMES, MEAL_TYPES, type MealType } from "@/lib/validation";
 import { MealCard } from "./MealCard";
+import { NutritionDonut } from "@/components/charts/NutritionDonut";
 
-// The weekly plan as day-tabs (Session 8 feedback — the 7-column grid was too
-// cramped). A row of day chips; picking one shows that day's breakfast/lunch/
-// dinner as three roomy cards. Opens on today when today has meals. Client-side
-// only: the meals were already screened + saved server-side.
+// The weekly plan as day-tabs (Session 8). A row of day chips; picking one shows
+// that day's nutrition donut (Session 10 — the donut now tracks the selected
+// day and names it) plus its breakfast/lunch/dinner as roomy cards. Opens on
+// today. Client-side only: the meals were already screened + saved server-side.
 export function WeekView({ meals }: { meals: MealWithIngredients[] }) {
   const byKey = new Map<string, MealWithIngredients>();
   for (const m of meals) byKey.set(`${m.day_of_week}-${m.meal_type}`, m);
@@ -17,6 +18,16 @@ export function WeekView({ meals }: { meals: MealWithIngredients[] }) {
   const todayIdx = (new Date().getDay() + 6) % 7;
   const initial = daysWithMeals.has(todayIdx) ? todayIdx : meals[0]?.day_of_week ?? 0;
   const [day, setDay] = useState(initial);
+
+  const dayMeals = MEAL_TYPES.map((type) => byKey.get(`${day}-${type}`));
+  const macros = dayMeals.reduce(
+    (a, m) => ({
+      protein: a.protein + (m?.protein_g ?? 0),
+      carbs: a.carbs + (m?.carbs_g ?? 0),
+      fat: a.fat + (m?.fat_g ?? 0),
+    }),
+    { protein: 0, carbs: 0, fat: 0 },
+  );
 
   return (
     <div>
@@ -52,17 +63,31 @@ export function WeekView({ meals }: { meals: MealWithIngredients[] }) {
         })}
       </div>
 
-      {/* Selected day's meals */}
-      <div className="mt-5">
-        <div className="mb-3 flex items-baseline gap-2">
-          <h3 className="font-display text-lg font-bold text-[#1F2933]">
-            {DAY_NAMES[day]}
-          </h3>
-          {day === todayIdx ? (
-            <span className="text-xs font-medium text-[#3B6149]">· today</span>
-          ) : null}
+      <div className="mt-3 flex items-baseline gap-2">
+        <h3 className="font-display text-lg font-bold text-[#1F2933]">
+          {DAY_NAMES[day]}
+        </h3>
+        {day === todayIdx ? (
+          <span className="text-xs font-medium text-[#3B6149]">· today</span>
+        ) : null}
+      </div>
+
+      <div className="mt-3 grid gap-4 lg:grid-cols-3">
+        {/* Nutrition for the selected day */}
+        <div className="rounded-2xl border border-[#E7E8EC] bg-white p-5">
+          <div className="mb-4 flex items-center justify-between border-b border-[#EEF0F3] pb-3">
+            <h4 className="font-display text-base font-bold text-[#1F2933]">
+              Nutrition
+            </h4>
+            <span className="text-xs font-medium text-[#3B6149]">
+              {DAY_NAMES[day]}
+            </span>
+          </div>
+          <NutritionDonut protein={macros.protein} carbs={macros.carbs} fat={macros.fat} />
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
+
+        {/* The day's meals */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:col-span-2">
           {MEAL_TYPES.map((type: MealType) => {
             const meal = byKey.get(`${day}-${type}`);
             return meal ? (

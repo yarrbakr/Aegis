@@ -6,13 +6,8 @@ import { GenerateButton } from "@/components/meal/GenerateButton";
 import { SafetyDashboard } from "@/components/charts/SafetyDashboard";
 import { BudgetBar } from "@/components/charts/BudgetBar";
 import { BudgetMeter } from "@/components/charts/BudgetMeter";
-import { NutritionDonut } from "@/components/charts/NutritionDonut";
 import { usd, usdApprox } from "@/lib/format";
-import {
-  dailyCosts,
-  weeklyMacros,
-  type SafetyEventRow,
-} from "@/lib/plan-stats";
+import { dailyCosts, type SafetyEventRow } from "@/lib/plan-stats";
 import type { MealPlan, MealWithIngredients, Profile } from "@/lib/types";
 
 export default async function PlanPage({
@@ -83,7 +78,6 @@ export default async function PlanPage({
       : `All ${served} meals below passed a deterministic allergen check before they were saved.`;
 
   const costs = dailyCosts(meals);
-  const macros = weeklyMacros(meals);
   const dailyBudget = budget != null ? Number((budget / 7).toFixed(2)) : null;
 
   return (
@@ -142,35 +136,23 @@ export default async function PlanPage({
               />
             </div>
 
-            {/* Budget + nutrition insights. */}
-            <div className="mb-6 grid gap-4 lg:grid-cols-3">
+            {/* Budget insights (nutrition now lives per-day in the week view). */}
+            <div className="mb-6 grid gap-4 sm:grid-cols-2">
               <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
                 <h2 className="text-sm font-semibold">Budget</h2>
                 <div className="mt-3">
                   <BudgetMeter total={totalCost} budget={budget} />
                 </div>
               </div>
-              <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5 lg:col-span-1">
+              <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
                 <h2 className="text-sm font-semibold">Cost by day</h2>
                 <div className="mt-2">
                   <BudgetBar data={costs} dailyBudget={dailyBudget} />
                 </div>
               </div>
-              <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
-                <h2 className="text-sm font-semibold">Weekly nutrition</h2>
-                <div className="mt-2">
-                  <NutritionDonut
-                    protein={macros.protein}
-                    carbs={macros.carbs}
-                    fat={macros.fat}
-                  />
-                </div>
-              </div>
             </div>
 
-            <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
-              <WeekView meals={meals} />
-            </div>
+            <WeekView meals={meals} />
           </>
         )}
 
