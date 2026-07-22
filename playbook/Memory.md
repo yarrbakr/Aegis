@@ -269,3 +269,13 @@
   - **Documentary.md:** new "Hardening — the day the tokens ran out" section (the 502 → Groq TPD cap → Mistral activation → small-model choice → loading states) + Phase 6 section + the honest "What I'd do next".
 - **Gate:** `npm run build` green (docs-only + README; no code change). **Chatbot deferred per user.**
 - **Next:** merge `docs/phase-6` → main + push; final fresh-browser deploy check; submission email (Full Name · Aegis · live URL · GitHub · 2–3 lines).
+
+### 2026-07-22 — Session 15: pre-submission code analysis (env + slot dedup)
+- **Attempted:** user asked to analyze the code; flagged `.env.example` as stale ("still mentions Render"). Then: "do [both fixes] and give me the submission requirements."
+- **Result (on `fix/env-example`, all green — build / 27-27 / 100%-100%):**
+  - **`.env.example`:** was describing the old two-service design (`NEXT_PUBLIC_API_URL` → FastAPI/Render), which isn't read anywhere. Rewrote to the real runtime env (Supabase public + `GROQ_API_KEY`/`MISTRAL_API_KEY` server-side + optional `SUPABASE_DB_URL`). Verified against every `process.env.*`.
+  - **Slot dedup (latent bug found in analysis):** the smaller Mistral fallback can return duplicate/`>21` meals; persistence is keyed by `(day, meal_type)` so duplicates collided + mis-mapped ingredients + inflated totals. Added `dedupeBySlot` in `generatePlan` (first-per-slot, every path). Not a safety issue (all meals still screened).
+  - Stale-reference sweep otherwise clean (the `mistral-large` hits are the intentional "why small" comment; Render in the playbook is the documented stretch).
+  - Provided the filled submission block (email → mudassar@qubitdynamics.ai; deadline 22 July 11:59 PM).
+- **Reminder (make-or-break for the evaluator):** `GROQ_API_KEY` (current) + `MISTRAL_API_KEY` must be in **Vercel** env, then redeploy + test one live generation.
+- **Next:** merge + push; user sets Vercel keys, does the live check, sends the email.
