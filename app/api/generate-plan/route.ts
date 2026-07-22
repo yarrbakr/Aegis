@@ -20,6 +20,7 @@ import {
   buildPlanMessages,
   buildRepairMessages,
   buildMealRegenMessages,
+  type PromptPrefs,
 } from "@/lib/prompt";
 import {
   generatedPlanSchema,
@@ -89,9 +90,9 @@ function validateMeal(raw: string): GeneratedMeal | null {
 // Generate the full week, validating output, with a single repair retry.
 async function generatePlan(
   profile: Profile,
-  allergensForPrompt: string[],
+  promptPrefs: PromptPrefs,
 ): Promise<GeneratedPlan> {
-  const messages = buildPlanMessages(profile, allergensForPrompt);
+  const messages = buildPlanMessages(profile, promptPrefs);
   const raw = await chatJSON(messages);
 
   const first = validate(raw);
@@ -112,13 +113,13 @@ async function regenerateMeal(
   profile: Profile,
   slot: GeneratedMeal,
   leakedAllergen: string,
-  allergensForPrompt: string[],
+  promptPrefs: PromptPrefs,
 ): Promise<GeneratedMeal | null> {
   const messages = buildMealRegenMessages(
     profile,
     slot,
     leakedAllergen,
-    allergensForPrompt,
+    promptPrefs,
   );
   const raw = await chatJSON(messages);
   const meal = validateMeal(raw);
@@ -174,7 +175,7 @@ function safePlaceholder(
 async function enforceSafety(
   profile: Profile,
   meals: GeneratedMeal[],
-  allergensForPrompt: string[],
+  promptPrefs: PromptPrefs,
 ): Promise<{ meals: SafeMeal[]; events: PendingEvent[] }> {
   const declared = profile.allergens;
   const events: PendingEvent[] = [];
@@ -215,7 +216,7 @@ async function enforceSafety(
         profile,
         current,
         verdict.hits[0]?.allergen ?? firstHit?.allergen ?? "",
-        allergensForPrompt,
+        promptPrefs,
       ).catch(() => null);
       if (!replacement) break; // fall through to the safe placeholder
       current = replacement;
@@ -282,18 +283,25 @@ export async function POST() {
     );
   }
 
-  // 1) INPUT GUARDRAIL — screen the user's free-text prefs for injection.
-  const { promptAllergens, findings } = screenPreferences(profile);
+  // 1) INPUT GUARDRAIL — screen the user's free-text prefs for injection
+  //    (allergens AND taste prefs — all of it reaches the model as data).
+  const { promptAllergens, promptCuisines, promptDislikes, findings } =
+    screenPreferences(profile);
+  const promptPrefs: PromptPrefs = {
+    allergens: promptAllergens,
+    cuisines: promptCuisines,
+    dislikes: promptDislikes,
+  };
   const events: PendingEvent[] = findings.map((f) => ({
     event_type: "injection_detected" as const,
     allergen: null,
     detail: describeFinding(f),
   }));
 
-  // 2) Generate + validate (the AI step) using the sanitized allergen list.
+  // 2) Generate + validate (the AI step) using the sanitized prefs.
   let plan: GeneratedPlan;
   try {
-    plan = await generatePlan(profile, promptAllergens);
+    plan = await generatePlan(profile, promptPrefs);
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
     console.error("[generate-plan] generation failed:", detail);
@@ -306,7 +314,7 @@ export async function POST() {
   // 3) OUTPUT GUARDRAIL — screen + regenerate. Never serve an unsafe meal.
   let safeMeals: SafeMeal[];
   try {
-    const enforced = await enforceSafety(profile, plan.meals, promptAllergens);
+    const enforced = await enforceSafety(profile, plan.meals, promptPrefs);
     safeMeals = enforced.meals;
     events.push(...enforced.events);
   } catch (err) {
