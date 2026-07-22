@@ -89,4 +89,19 @@
 **Fix applied:** verified via form_input + endpoint fetch + JS state reads; `git reset --soft` and recommitted with `-F` message files (4 clean commits). `npm run build` green, `test:guardrail` 18/18, `eval` 100%/100%.
 
 ---
+
+### #7 — Dashboard app shell + pastel redesign  ·  Design pass (D11)  ·  2026-07-22
+**Prompt (summary or verbatim):**
+> User shared a "Daily Meal" dashboard reference and confirmed the direction: adopt the pastel scheme with a hint of Aegis; landing = dashboard; sidebar IA = Dashboard · Meal Plans · Security Console · Profile; "meal for today" prominent + real charts/pie; snack recommendations (guardrail-screened) instead of meal recs; keep the default accent (sage = active nav + primary buttons, coral = safety).
+
+**Output achieved:** built on `feat/dashboard-shell`, `npm run build` green.
+- **Shell:** `components/shell/Sidebar.tsx` + `Topbar.tsx` over an `app/(app)/` route group whose `layout.tsx` gates auth once. Sage active pill; icon-only rail on mobile, full labels on md+.
+- **Dashboard (pastel):** `DashboardView` (presentation split from data-loading) — stat cards (calories/carbs/protein/budget), a sage `CaloriesLine` chart (Weekly toggle; Monthly/Yearly gated honestly), the macro Report donut, Meal-for-today, and snack recommendations. A slim safety strip links to the Security Console (safety stays visible without a stat card).
+- **Snacks:** `lib/snacks.ts` — a curated list filtered through the SAME `screenMeal` guardrail; the preview (peanuts+milk) correctly hid PB rice cakes / yogurt / cheese-crackers. Guardrail earns its keep on a 2nd surface, zero extra model calls.
+- **Nav pages:** Meal Plans / Security Console / Profile reuse the already-verified charts, PlanGrid, and SafetyDashboard inside the shell.
+
+**Problems created:** (1) couldn't log into local dev (expired session) to view the authed pages. (2) stale dev-server logs showed old `blocked`/`safetyStats` errors (not real). (3) after deleting the temp preview route, `next build` tripped on a stale generated type in `.next`.
+**Fix applied:** (1) split `DashboardView` and rendered it with sample data on a throwaway `/design-preview` route (no auth/DB) to screenshot, then deleted it — never entered credentials. (2) a full `npm run build` confirmed disk was clean. (3) `rm -rf .next && npm run build` → green.
+
+---
 *(Build prompts continue below as we go.)*
