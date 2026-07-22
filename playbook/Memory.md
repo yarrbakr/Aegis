@@ -5,12 +5,13 @@
 ---
 
 ## 📍 Current status
-- **Phase:** **Phase 3 + Phase 4 COMPLETE** ✅ (verified live locally) — deterministic allergen guardrail + injection filter + Mistral fallback + safe badges (Phase 3), Safety Dashboard + budget/nutrition charts + design-system fonts (Phase 4), all in **USD**. Next: Phase 5 (eval harness) → Phase 6 (docs & submission).
-- **Currently working on:** merged `feat/phase-3-trust` → `main`; `feat/phase-4-viz` built & verified, ready to merge → `main`. **Push pending user permission** (this task did NOT authorize a push).
+- **Phase:** **Phases 3, 4, 5 COMPLETE** ✅ — guardrail + injection + Mistral fallback + safe badges (P3), Safety Dashboard + budget/nutrition charts + fonts (P4), eval harness (P5), all in **USD**. Only **Phase 6 (docs/README + submission)** remains.
+- **Currently working on:** Phase 3 & 4 merged to `main`; `feat/phase-5-eval` built & verified, ready to merge → `main`. **PUSH IS ON HOLD by the user** — they have major design/color + interactive changes to make first, THEN we push (which updates the live site).
 - **Currently-edited file:** none.
-- **Live URLs:** **https://aegis-zeta-six.vercel.app** — auth + onboarding live; generation live once `GROQ_API_KEY` is in Vercel (user said the key is added). Prod not yet re-verified with the Phase 3/4 code (not pushed yet).
-- **Blockers:** none local. To see Phase 3/4 in prod, merge Phase 4 → main and push (needs permission) → Vercel auto-deploys.
-- **Git:** remote = `github.com/yarrbakr/Aegis`. `main` = Phase 3 merged (7 code commits). `feat/phase-4-viz` = 2 code commits off `main`, not merged. Workflow: branch-per-feature, commit everything, ask before every push.
+- **Live URLs:** **https://aegis-zeta-six.vercel.app** — still the OLD Phase 2 build (nothing pushed since). Local dev has all of P3/P4/P5.
+- **Blockers:** none. Deliberately holding the push per user until their design/interactive changes land.
+- **Git:** remote = `github.com/yarrbakr/Aegis`. `main` = P3 + P4 merged (~10 commits ahead of origin, unpushed). `feat/phase-5-eval` = 1 code commit off `main`, not merged. Workflow: branch-per-feature, commit everything, ask before every push.
+- **Eval number (for README):** `npm run eval` → **236 meals / 14 profiles → 100.0% catch rate, 100.0% specificity** (saved in `lib/eval/RESULTS.md`).
 
 ---
 
@@ -43,14 +44,16 @@
 - **Phase 2 (AI generation):** `POST /api/generate-plan` (Next.js route, `nodejs` runtime, `maxDuration=60`): auth → load profile → fixed prompt w/ prefs as data → Groq Llama 3.3 70B (JSON mode, temp 0.3) → **Zod-validate w/ one repair retry** → persist plan/meals/ingredients as the user (RLS). UI: `MealCard`/`PlanGrid` (7-day, horizontal-scroll), `GenerateButton` (loading + inline error), `/plan/[id]` (RLS read-back), dashboard view/regenerate. **Verified locally:** 1 click → 21 meals, total ~68.50 within 120 budget, model avoided the user's declared allergens (Peanuts/Shellfish/Kiwi), no console errors, `npm run build` green.
 - **Phase 3 (trust layer):** deterministic guardrail in `lib/guardrails/` — `allergen.ts` `screenMeal()` is **defense-in-depth** (tags + ingredient names + meal text, synonym-expanded; allergen-aware so dairy-free butters / plant milks / GF flours don't false-trip). Route wired: input guardrail (`injection.ts` `screenPreferences`) → generate → output guardrail (block + single-meal regenerate ≤3/meal, ≤12/plan; safe placeholder fallback) → persist with `safety_status` → log `meal_passed`/`meal_blocked`/`injection_detected` to `safety_events`. `lib/llm/groq.ts` gained an optional **Mistral fallback** (`MISTRAL_API_KEY`). `MealCard` shows **"✓ allergen-safe"**. Test `lib/guardrails/guardrails.test.ts` (`npm run test:guardrail`) = **14/14**. Currency → **USD** (`lib/format.ts`). **Verified live:** POST → 200, 21 screened / 21 passed / 0 blocked, `safety_events` read back, no console errors.
 - **Phase 4 (viz & taste):** `components/charts/SafetyDashboard.tsx` (dark console from `safety_events`) on plan (scoped) + dashboard (lifetime); `BudgetMeter`, `BudgetBar` (recharts, daily-budget line), `NutritionDonut` (recharts) via `lib/plan-stats.ts`; fonts Plus Jakarta Sans / Inter / JetBrains Mono (`app/layout.tsx` + `globals.css`). **Verified live:** console + charts render, USD everywhere, safe badges, no sideways scroll, zero console errors. Added dep: **recharts** (locked lib list).
+- **Phase 5 (eval):** `lib/eval/run-eval.ts` (`npm run eval`) — labeled corpus of unsafe + safe meals across 14 profiles through the real shipped `screenMeal` (unsafe hidden 3 ways incl. untagged + name-only). **236 meals → 100.0% catch rate, 100.0% specificity.** Output in `lib/eval/RESULTS.md`. Exits non-zero on any miss.
 
 ## 🔨 In progress
-- Merge `feat/phase-4-viz` → `main` (Phase 3 already merged), then push — **push needs user permission** (not given this task).
+- Merge `feat/phase-5-eval` → `main` (P3/P4 already merged). **Push remains ON HOLD** per user (design/interactive changes coming first).
 
 ## ⏭️ Next up
-1. Merge Phase 4 → main; get push permission → push → Vercel auto-deploy → verify Phase 3/4 live in prod (user says `GROQ_API_KEY` is in Vercel now).
-2. **Phase 5 — eval harness:** a TS/node script running `screenMeal` over many allergy profiles, asserting 0 unsafe pass, printing the **catch rate** (target 100%). `guardrails.test.ts` already pre-figures it (14/14). Save the output for the README.
-3. **Phase 6 — docs & submission:** `README.md` (decides-then-builds + live link + eval number), finalize Documentary/Prompt/Memory, final deploy check, email submission.
+1. **User's design/color + interactive changes** (their next work) — do these BEFORE pushing.
+2. **Phase 6 — docs & submission:** `README.md` (decides-then-builds + stack/data-model + locked-decisions table + "what I'd do next" + live link + the eval number + "built with Claude Code"), finalize Documentary/Prompt/Memory, final deploy check from a fresh browser, email submission (Full Name · Aegis · Live URL · GitHub · 2–3 line description).
+3. When user says go: push `main` → Vercel auto-deploys → verify P3/P4/P5 live in prod (user says `GROQ_API_KEY` is in Vercel now).
+- **Stretch (only if ahead):** deploy `/backend` FastAPI to Render as a live evidence endpoint; single-meal regenerate button; RAG.
 
 ## 🐞 Open bugs / issues
 - none yet.
@@ -130,3 +133,11 @@
 - **Outputs & logs:** `npm run build` green; `npm run test:guardrail` = **14/14 (100%)**. Live: `POST /api/generate-plan → 200` (13.7s), **21 screened / 21 passed / 0 blocked**, plan `14ee5fd2…`, declared Peanuts/Shellfish/Kiwi absent, `safety_events` render in the Safety Dashboard, charts draw, USD everywhere, no console errors, no sideways scroll. Commits on `feat/phase-3-trust` (b2c97cf, 03d4a8a, 5e74ea9, d03c325, 3ad910f) merged to main (37830c2); `feat/phase-4-viz` (7c166b9, 5e1bd3e) not yet merged. Added dep: recharts@3.10.0. Note: 3 npm-audit advisories are in next/postcss/sharp (pre-existing framework deps), not recharts — left as-is near deadline.
 - **Fix applied:** see errors above.
 - **Next:** merge Phase 4 → main; **ask for push permission**; then Phase 5 eval + Phase 6 docs/submission.
+
+### 2026-07-22 — Session 5b: Phase 5 eval harness (push held)
+- **Attempted:** user said "do Phase 5 now, HOLD the push — I have major design/color + interactive changes before pushing." Build the eval harness that prints the guardrail catch rate.
+- **Result:** ✅ `lib/eval/run-eval.ts` (`npm run eval`) — labeled corpus across 14 allergy profiles, each unsafe food planted 3 ways (correct tag / **untagged ingredient** / **meal-name-only**), plus safe-by-construction meals; all run through the REAL shipped `screenMeal` (unsafe foods are an independent list, so it's not circular). Reports catch rate + specificity, exits non-zero on any miss. **236 meals (180 unsafe / 56 safe) → 100.0% catch rate, 100.0% specificity.** Saved `lib/eval/RESULTS.md` for the README. `npm run build` green, `npm run test:guardrail` still 14/14.
+- **Errors & fixes:** harmless Node `MODULE_TYPELESS_PACKAGE_JSON` warning on the eval script — left as-is (adding `"type":"module"` risks breaking Next's CJS config resolution). Excluded `lib/eval/**` from tsconfig (Node-only `.ts`-extension imports).
+- **Outputs & logs:** commit `121c181` on `feat/phase-5-eval`. Not merged yet.
+- **Fix applied:** n/a.
+- **Next:** merge `feat/phase-5-eval` → main (local only — **still holding the push** per user). Then user's design/interactive changes → Phase 6 docs → push when they say go.

@@ -63,4 +63,14 @@
 **Fix applied:** (1) dropped explicit formatter param types + `Number()` coercion. (2) excluded `**/*.test.ts` from tsconfig; run the test via Node type-stripping. (3) tested the endpoint directly with `fetch()` from the page session (endpoint testing is Rules-endorsed), then rendered the resulting plan page.
 
 ---
+
+### #5 — Phase 5: eval harness (push held)  ·  Phase 5  ·  2026-07-22
+**Prompt (summary or verbatim):**
+> "Do Phase 5 for now and hold the push — I have major design/color and interactive feature changes before we push it to GitHub and the live site updates."
+
+**Output achieved:** `lib/eval/run-eval.ts` (`npm run eval`) — a labeled corpus of unsafe + safe meals across 14 allergy profiles run through the **real shipped** `screenMeal` (unsafe foods planted 3 ways: correct tag, **untagged** ingredient, meal-name-only; the food list is independent of the guardrail's synonyms, so it's not circular). Prints catch rate + specificity, exits non-zero on any miss. **236 meals (180 unsafe / 56 safe) → 100.0% catch rate, 100.0% specificity.** Output saved to `lib/eval/RESULTS.md` for the README. Push deliberately NOT done — held per user.
+**Problems created:** harmless Node module-type warning on the script; `.ts`-extension imports would break Next's typecheck.
+**Fix applied:** left the warning (adding `"type":"module"` risks Next's CJS config); excluded `lib/eval/**` from tsconfig; run via Node type-stripping.
+
+---
 *(Build prompts continue below as we go.)*
