@@ -184,6 +184,24 @@ async function enforceSafety(
   for (const meal of meals) {
     let current = meal;
     let verdict = screenMeal(current, declared);
+
+    // Safe on the first try — serve as-is, one clean "passed" line.
+    if (verdict.safe) {
+      events.push({
+        event_type: "meal_passed",
+        allergen: null,
+        detail: `${slotLabel(current)}: "${current.name}" passed the allergen guardrail.`,
+      });
+      out.push({ ...current, safety_status: "passed" });
+      continue;
+    }
+
+    // Unsafe: capture WHY once (for a single, clear audit line), then quietly
+    // regenerate up to the retry budget — we do NOT log each attempt (that read
+    // like the model was stuck; the user only cares that it was caught + fixed).
+    const originalName = current.name;
+    const firstHit = verdict.hits[0];
+    const reason = firstHit ? describeHit(firstHit) : "a declared allergen";
     let regens = 0;
 
     while (
@@ -191,41 +209,35 @@ async function enforceSafety(
       regens < MAX_REGEN_PER_MEAL &&
       planRegens < MAX_REGEN_PER_PLAN
     ) {
-      const hit = verdict.hits[0];
-      events.push({
-        event_type: "meal_blocked",
-        allergen: hit.allergen,
-        detail: `${slotLabel(current)}: "${current.name}" blocked — ${describeHit(hit)}. Regenerating (attempt ${regens + 1}/${MAX_REGEN_PER_MEAL}).`,
-      });
       regens++;
       planRegens++;
-
       const replacement = await regenerateMeal(
         profile,
         current,
-        hit.allergen,
+        verdict.hits[0]?.allergen ?? firstHit?.allergen ?? "",
         allergensForPrompt,
       ).catch(() => null);
-      if (!replacement) break; // fall through to the placeholder
-
+      if (!replacement) break; // fall through to the safe placeholder
       current = replacement;
       verdict = screenMeal(current, declared);
     }
 
     if (verdict.safe) {
-      const status: SafetyStatus = regens > 0 ? "blocked_regenerated" : "passed";
+      // Regenerated into a safe meal — ONE event describing the save.
       events.push({
-        event_type: "meal_passed",
-        allergen: null,
-        detail: `${slotLabel(current)}: "${current.name}" passed the allergen guardrail${regens ? ` after ${regens} regeneration(s)` : ""}.`,
+        event_type: "meal_blocked",
+        allergen: firstHit?.allergen ?? null,
+        detail: `${slotLabel(meal)}: original suggestion "${originalName}" was blocked (${reason}) and replaced with a safe meal, "${current.name}".`,
       });
-      out.push({ ...current, safety_status: status });
+      out.push({ ...current, safety_status: "blocked_regenerated" });
     } else {
+      // Couldn't produce a safe version within the user's restrictions — serve a
+      // guaranteed-safe fallback, never the unsafe meal.
       const placeholder = safePlaceholder(meal.day_of_week, meal.meal_type, declared);
       events.push({
         event_type: "meal_blocked",
-        allergen: verdict.hits[0]?.allergen ?? null,
-        detail: `${slotLabel(meal)}: could not produce a safe ${meal.meal_type} after ${regens} attempt(s); served a safe placeholder instead.`,
+        allergen: firstHit?.allergen ?? null,
+        detail: `${slotLabel(meal)}: original suggestion "${originalName}" was blocked (${reason}); no safe version could be generated within your restrictions, so a safe fallback plate ("${placeholder.name}") was served.`,
       });
       out.push({ ...placeholder, safety_status: "blocked_regenerated" });
     }

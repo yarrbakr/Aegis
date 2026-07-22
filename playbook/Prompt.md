@@ -73,4 +73,20 @@
 **Fix applied:** left the warning (adding `"type":"module"` risks Next's CJS config); excluded `lib/eval/**` from tsconfig; run via Node type-stripping.
 
 ---
+
+### #6 — 5 UX/safety fixes from live testing  ·  Post-P5 hardening  ·  2026-07-22
+**Prompt (summary or verbatim):**
+> User tested locally and reported 5 issues (annotated screenshots): (1) sign-in/create-account fields identical; (2) name & budget marked optional but should be required; (3) Safety Dashboard says 21 passed AND 10 blocked (looks like 31); (4) regeneration logs look like the model is stuck; (5) a blocked Tuesday-dinner log vs a "safe" replacement card — mismatch. "First fix these, then we'll come to the designing."
+
+**Output achieved:** all 5 fixed + a bonus root-cause fix, verified live.
+- Login → two-mode form (Sign in vs Create account with a required Name field, distinct actions).
+- Name + weekly budget now required (schema + form).
+- Safety Dashboard metrics recomputed from the authoritative meals table and reworded to non-additive tiles (MEALS SERVED / CAUGHT + REGENERATED / INJECTIONS / ALLERGENS) with a plain-language subtitle — no more contradiction.
+- Guardrail logs one clear event per meal ("original X blocked → replaced with safe Y"), no "attempt 1/3" spam; catches surfaced first in the log.
+- Bonus: fixed a real guardrail false positive — "salt-free seasoning" / "gluten-free bread" / "dairy-free cheese" were being blocked; `screenMeal` now honors "-free / free of / no / without" in name scans (tags still trusted).
+
+**Problems created:** browser-pane clicks unreliable; a compound PowerShell here-string merged two commits.
+**Fix applied:** verified via form_input + endpoint fetch + JS state reads; `git reset --soft` and recommitted with `-F` message files (4 clean commits). `npm run build` green, `test:guardrail` 18/18, `eval` 100%/100%.
+
+---
 *(Build prompts continue below as we go.)*

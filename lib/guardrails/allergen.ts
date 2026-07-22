@@ -216,6 +216,27 @@ function matchNeedles(hay: string, needles: Needles): string | null {
   return null;
 }
 
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// True when the text asserts it is FREE OF this allergen — "gluten-free bread",
+// "dairy free", "no peanuts", "free from sesame". Applied to NAME/description
+// scans only (an explicit allergen_tag is always trusted), so we don't block
+// items whose whole point is being free of the allergen — which matters for
+// exactly the allergic users who rely on "-free" products.
+function assertsFree(text: string, needles: Needles): boolean {
+  const s = ` ${text.toLowerCase()} `;
+  for (const term of [...needles.words, ...needles.phrases]) {
+    const e = escapeRegex(term);
+    if (new RegExp(`\\b${e}[-\\s]?free\\b`).test(s)) return true;
+    if (new RegExp(`\\b(?:free\\s+(?:of|from)|no|without)\\s+${e}\\b`).test(s)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /** Find the first place `allergen` shows up in `meal`, or null (tags→names→meal). */
 function findHit(
   meal: ScreenableMeal,
@@ -231,16 +252,20 @@ function findHit(
       if (m) return { matched: m, source: "tag", ingredient: ing.name };
     }
   }
-  // 2) ingredient name + quantity
+  // 2) ingredient name + quantity — unless the name asserts it's free of this
+  //    allergen ("gluten-free bread", "salt-free seasoning").
   for (const ing of meal.ingredients) {
-    const hay = haystackFor(`${ing.name} ${ing.quantity ?? ""}`, key, true);
-    const m = matchNeedles(hay, needles);
+    const text = `${ing.name} ${ing.quantity ?? ""}`;
+    if (assertsFree(text, needles)) continue;
+    const m = matchNeedles(haystackFor(text, key, true), needles);
     if (m) return { matched: m, source: "ingredient", ingredient: ing.name };
   }
-  // 3) meal name + description
-  const hay = haystackFor(`${meal.name} ${meal.description ?? ""}`, key, true);
-  const m = matchNeedles(hay, needles);
-  if (m) return { matched: m, source: "meal" };
+  // 3) meal name + description — same "free-of" guard.
+  const mealText = `${meal.name} ${meal.description ?? ""}`;
+  if (!assertsFree(mealText, needles)) {
+    const m = matchNeedles(haystackFor(mealText, key, true), needles);
+    if (m) return { matched: m, source: "meal" };
+  }
 
   return null;
 }

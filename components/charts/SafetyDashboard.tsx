@@ -8,8 +8,8 @@ import type { SafetyEventRow } from "@/lib/plan-stats";
 type Props = {
   title: string;
   subtitle?: string;
-  served: number; // meals served (all have passed the guardrail)
-  blocked: number; // block + regenerate actions taken
+  served: number; // meals served (every one passed the guardrail)
+  regenerated: number; // distinct meals whose unsafe first draft was caught + replaced
   injections: number; // injection patterns caught
   allergensWatched: string[]; // the user's declared allergens
   events?: SafetyEventRow[]; // recent log lines (newest first)
@@ -56,12 +56,21 @@ export function SafetyDashboard({
   title,
   subtitle,
   served,
-  blocked,
+  regenerated,
   injections,
   allergensWatched,
   events = [],
 }: Props) {
-  const recent = events.slice(0, 6);
+  // Surface the interesting events (catches + injections) first — a single block
+  // among 20 passes should never be buried below the fold.
+  const priority = (t: string) => (t === "meal_passed" ? 1 : 0);
+  const recent = [...events]
+    .sort(
+      (a, b) =>
+        priority(a.event_type) - priority(b.event_type) ||
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    )
+    .slice(0, 6);
 
   return (
     <section className="rounded-2xl border border-[#1E293B] bg-[#0F172A] p-5 text-slate-200">
@@ -84,23 +93,27 @@ export function SafetyDashboard({
       {subtitle ? <p className="mt-0.5 text-xs text-slate-400">{subtitle}</p> : null}
 
       <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-        <Stat label="Meals screened" value={served} color="#FFFFFF" />
-        <Stat label="Passed safe" value={served} color="#4ADE80" />
+        <Stat label="Meals served · all safe" value={served} color="#4ADE80" />
         <Stat
-          label="Blocked + regen"
-          value={blocked}
-          color={blocked > 0 ? "#F87171" : "#64748B"}
+          label="Caught + regenerated"
+          value={regenerated}
+          color={regenerated > 0 ? "#FBBF24" : "#64748B"}
         />
         <Stat
           label="Injections caught"
           value={injections}
           color={injections > 0 ? "#FBBF24" : "#64748B"}
         />
+        <Stat
+          label="Allergens watched"
+          value={allergensWatched.length}
+          color="#FFFFFF"
+        />
       </div>
 
       <div className="mt-3 rounded-lg border border-[#1E293B] bg-[#0B1220] px-3 py-2.5">
         <div className="text-[10px] uppercase tracking-[0.08em] text-slate-400">
-          Allergens watched ({allergensWatched.length})
+          Screening for
         </div>
         <div className="mt-1.5 flex flex-wrap gap-1.5">
           {allergensWatched.length ? (

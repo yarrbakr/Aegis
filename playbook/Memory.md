@@ -5,8 +5,8 @@
 ---
 
 ## 📍 Current status
-- **Phase:** **Phases 3, 4, 5 COMPLETE** ✅ — guardrail + injection + Mistral fallback + safe badges (P3), Safety Dashboard + budget/nutrition charts + fonts (P4), eval harness (P5), all in **USD**. Only **Phase 6 (docs/README + submission)** remains.
-- **Currently working on:** Phase 3 & 4 merged to `main`; `feat/phase-5-eval` built & verified, ready to merge → `main`. **PUSH IS ON HOLD by the user** — they have major design/color + interactive changes to make first, THEN we push (which updates the live site).
+- **Phase:** **Phases 3, 4, 5 COMPLETE** ✅ + **5 UX/safety fixes** from the user's live testing (see Session 6). Only **Phase 6 (docs/README + submission)** remains — after the user's design pass.
+- **Currently working on:** P3/P4/P5 merged to `main`; `fix/ux-and-safety-log` built & verified, ready to merge → `main`. **PUSH IS ON HOLD by the user** — they have major design/color + interactive changes to make first, THEN we push (which updates the live site).
 - **Currently-edited file:** none.
 - **Live URLs:** **https://aegis-zeta-six.vercel.app** — still the OLD Phase 2 build (nothing pushed since). Local dev has all of P3/P4/P5.
 - **Blockers:** none. Deliberately holding the push per user until their design/interactive changes land.
@@ -141,3 +141,16 @@
 - **Outputs & logs:** commit `121c181` on `feat/phase-5-eval`. Not merged yet.
 - **Fix applied:** n/a.
 - **Next:** merge `feat/phase-5-eval` → main (local only — **still holding the push** per user). Then user's design/interactive changes → Phase 6 docs → push when they say go.
+
+### 2026-07-22 — Session 6: 5 UX/safety fixes from live testing (push still held)
+- **Attempted:** user reported 5 issues from testing and said "fix these, then we'll do design." (1) sign-in & create-account looked identical; (2) name/budget wrongly optional; (3) Safety Dashboard read as contradictory (21 passed + 10 blocked ≈ 31); (4) regeneration logs ("attempt 1/3") looked like the model was stuck; (5) a blocked meal's log didn't match its safe replacement card.
+- **Result:** ✅ all fixed on `fix/ux-and-safety-log`, verified live.
+  1. Login is a two-mode form (tab toggle): Sign in = email+password; Create account = required Name + email + password + own button. Signup writes display_name via auth metadata → trigger.
+  2. `onboardingSchema` requires display_name + weekly_budget; form drops "(optional)", adds `required`.
+  3. Metrics now come from the authoritative **meals table** (safety_status), tiles reworked to non-additive: MEALS SERVED (all safe) / CAUGHT + REGENERATED / INJECTIONS / ALLERGENS + plain-language subtitle. Verified live: "21 served · all safe / 1 caught + regenerated / 0 injections".
+  4. Guardrail logs exactly **one event per meal** (no per-attempt spam); blocked meals read "original X blocked (reason) → replaced with safe Y / safe fallback plate". Recent-events list surfaces catches first.
+  5. Same reworded log makes the safe replacement card consistent with the log — no mismatch.
+  - **Bonus (root cause of #5's placeholder):** found + fixed a real guardrail false positive — "salt-free seasoning" (and "gluten-free bread" / "dairy-free cheese") were being blocked. `screenMeal` now honors "<allergen>-free / free of / no / without" in name scans (tags still trusted; real allergens elsewhere still caught).
+- **Errors & fixes:** browser-pane clicks unreliable again → used `form_input` + endpoint `fetch` + JS state reads for verification. A compound here-string mis-parsed and merged two commits → `git reset --soft` and recommitted via `-F` message files (4 clean commits: 7e2c7bc auth, c9be1b4 required, bd69669 metrics, 45746a6 free-of).
+- **Outputs & logs:** `npm run build` green; `npm run test:guardrail` **18/18**; `npm run eval` still **100% / 100%**. Live: new plan `62739979…` shows coherent metrics + one-line block log + consistent safe plate.
+- **Next:** merge `fix/ux-and-safety-log` → main (local). Hold push. User does design/interactive pass → Phase 6 → push on their go.

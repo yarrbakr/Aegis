@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { GenerateButton } from "@/components/meal/GenerateButton";
 import { SafetyDashboard } from "@/components/charts/SafetyDashboard";
 import { usd, usdApprox } from "@/lib/format";
-import { safetyStats, type SafetyEventRow } from "@/lib/plan-stats";
+import type { SafetyEventRow } from "@/lib/plan-stats";
 import type { MealPlan, Profile } from "@/lib/types";
 
 export default async function DashboardPage() {
@@ -37,7 +37,9 @@ export default async function DashboardPage() {
     "id" | "created_at" | "total_cost" | "status"
   > | null;
 
-  // Lifetime safety record — every guardrail decision across the user's plans.
+  // Lifetime safety record. Counts come from the authoritative meals table
+  // (RLS-scoped to this user) so "served" and "regenerated" can't contradict;
+  // the recent-events list + injection count come from the audit log.
   const { data: eventRows } = await supabase
     .from("safety_events")
     .select("event_type, allergen, detail, created_at")
@@ -45,7 +47,17 @@ export default async function DashboardPage() {
     .order("created_at", { ascending: false })
     .limit(100);
   const events = (eventRows ?? []) as SafetyEventRow[];
-  const stats = safetyStats(events);
+
+  const { data: mealSafetyRows } = await supabase
+    .from("meals")
+    .select("safety_status");
+  const servedLifetime = mealSafetyRows?.length ?? 0;
+  const regeneratedLifetime = (mealSafetyRows ?? []).filter(
+    (m) => (m as { safety_status: string }).safety_status === "blocked_regenerated",
+  ).length;
+  const injectionsLifetime = events.filter(
+    (e) => e.event_type === "injection_detected",
+  ).length;
 
   return (
     <main className="min-h-dvh bg-[#F8F9FA] px-4 py-10 text-[#1F2933]">
@@ -171,10 +183,18 @@ export default async function DashboardPage() {
           <div className="mt-6">
             <SafetyDashboard
               title="Your safety record"
-              subtitle="Every AI-generated meal you've received passed the deterministic allergen guardrail."
-              served={stats.passed}
-              blocked={stats.blocked}
-              injections={stats.injections}
+              subtitle={
+                servedLifetime > 0
+                  ? `${servedLifetime} AI-generated meals served — all allergen-safe.${
+                      regeneratedLifetime > 0
+                        ? ` ${regeneratedLifetime} unsafe suggestion(s) caught and regenerated.`
+                        : ""
+                    }`
+                  : "Generate a plan and every meal will be screened against your allergens here."
+              }
+              served={servedLifetime}
+              regenerated={regeneratedLifetime}
+              injections={injectionsLifetime}
               allergensWatched={profile!.allergens}
               events={events}
             />
