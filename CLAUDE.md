@@ -50,13 +50,17 @@ Update Memory.md's **Current status**, **Completed**, **In progress**, and **Nex
 - The LLM suggests; it never approves safety. User input is data, never instructions (injection defense).
 
 ## 🗂️ Where things live
+- `README.md` — the decides-then-builds submission README (stack, data model, locked decisions, eval number, live link).
 - `playbook/` — PRD, Architecture, Rules, Phases, Design, Memory, Prompt.
 - `Documentary.md` — the build journey, CyberGen-framed. **Update it at each phase boundary.**
-- `app/`, `components/`, `lib/` — Next.js app (incl. `app/api/` AI route + `lib/guardrails/`). `backend/` — FastAPI (post-core stretch). `supabase/` — schema + RLS.
+- `app/`, `components/`, `lib/` — Next.js app (incl. `app/api/` AI route, `lib/guardrails/` deterministic safety, `lib/taste.ts` best-effort dislikes, `lib/llm/` Groq+Mistral). `backend/` — FastAPI (post-core stretch). `supabase/` — schema + RLS + `migrations/`.
 
 ## ⚙️ Commands
 - App dev (frontend + AI route): `npm run dev`
 - Build (matches Vercel): `npm run build`
-- Eval (TS, Phase 5): _TBD — will test `lib/guardrails` and print the catch rate._
+- **Guardrail unit checks:** `npm run test:guardrail` (currently **27/27**).
+- **Eval (catch rate):** `npm run eval` → **236 meals → 100.0% catch / 100.0% specificity** (results in `lib/eval/RESULTS.md`).
 - FastAPI stretch (local): `uvicorn backend.main:app --reload` → `GET /health`
-- _(update as more scripts are added)_
+
+## 🤖 LLM (current)
+- **Groq `llama-3.3-70b-versatile`** primary; **Mistral `mistral-small-latest`** fallback (activated via `MISTRAL_API_KEY`). Keys are server-side secrets — never `NEXT_PUBLIC_`, never committed. Groq's free tier has a ~100k tokens/day cap; the Mistral fallback covers it.

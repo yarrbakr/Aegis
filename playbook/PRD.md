@@ -50,16 +50,23 @@ That question is CyberGen's entire business. Aegis answers it in a friendly cons
 
 ### 3.3 Visualization / taste
 - **Weekly budget bar chart** + a "**$X of $Y budget**" meter.
-- **Nutrition donut** — calories + protein/carbs/fat.
-- **Safety Dashboard** styled like a mini security console (the standout visual).
+- **Nutrition donut** — calories + protein/carbs/fat (per selected day on Meal Plans).
+- **Security Console** — the safety story as a live, on-brand card (see D11; originally a dark console).
+- **Taste preferences** *(added — completes "preferences/budget/dietary")* — favorite cuisines + foods to skip, fed to the plan as best-effort data. Enforced deterministically (disliked meals re-rolled) but **never over safety** — only allergens are guardrail-enforced.
+- **Snack recommendations** — a curated list run through the **same** `screenMeal` guardrail, so the dashboard can only ever recommend an allergen-safe (and non-disliked) snack.
+
+### 3.3b Dashboard shell (D11)
+- Pastel dashboard app shell: collapsible sidebar (Dashboard · Meal Plans · Security Console · Profile), stat cards, calories chart, "meal for today", animated landing hero, navigation loading states.
 
 ### 3.4 Evidence
 - **Eval harness** — a script that runs N generations across a set of allergy profiles and reports the guardrail's **catch rate as a single number** (target: 100% of unsafe meals blocked).
 
 ### 3.5 Stretch (ONLY if ahead of schedule — named to stay disciplined, not to build now)
+- **Conversational assistant** — a Mistral-based chat widget (kept off Groq's quota), scoped to *help* and to **defer every safety question to the deterministic guardrail** (never adjudicating safety itself). *Designed; intentionally deferred to protect the submission timeline.*
 - Auto-generated shopping list from the plan.
-- Regenerate a single meal.
+- Regenerate a single meal (a "swap" button in the UI; the engine already regenerates single meals internally).
 - **RAG** — retrieve from a curated recipe dataset instead of pure generation (adds the literal word "RAG" to the stack).
+- Deploy the `/backend` FastAPI to Render as a live evidence endpoint.
 
 ---
 

@@ -145,13 +145,40 @@ Alongside it, the numbers the brief actually asks for: a **budget meter** (spend
 
 **Learned / decided:** the distinction that keeps a "safety app" honest is *enforced vs. best-effort*. Allergens are enforced deterministically and can never be traded away; taste is best-effort and clearly labelled as such in the UI — but where we *can* make it deterministic (re-rolling dislikes, filtering snacks) we do, because verify-in-code beats trust-the-model every time.
 
+### Hardening — the day the tokens ran out
+**Intended:** ship the taste feature, then finish docs. Reality intervened — testing a fresh account on the live site, "Generate" returned a **502**. Good: a real bug to debug the way the playbook says to — evidence first.
+
+**What happened:** I probed Groq directly with the production key. A trivial call returned **200** (key + model fine), but a full 21-meal request returned **429 — "tokens per day (TPD): Limit 100000, Used 95530."** The 502 wasn't a bug at all: the day's heavy testing had exhausted **Groq's free-tier daily token cap.** That single line reframed everything — including the user's next question, *"what happened to the Mistral fallback?"* The fallback existed and was correct in `lib/llm/groq.ts` since Phase 3 — it had simply **never been keyed** (`MISTRAL_API_KEY` was never set), so nothing caught Groq's 429.
+
+**What shipped from it:**
+- **The fallback got turned on.** With a Mistral key set, I probed it end-to-end: 200, a full valid 21-meal plan, honoring the allergen *and* the dislike. But it ran **~56s** — right against Vercel's 60s function limit, so a follow-up regen would time out. So the fallback model became **`mistral-small-latest`** (~32s): for a *degraded-mode backstop*, dependable-and-fast beats marginally-better-and-timed-out.
+- **Honest failure UX.** A provider rate-limit now surfaces as a friendly "Aegis is at capacity, try again shortly" (429), not a scary 502 — it reads as busy, not broken.
+- **Frugality.** Single-meal calls (allergen regen + dislike re-roll) dropped from 8000 to 2000 max_tokens — Groq reserves the *requested* budget up front, so this stretches the free daily cap.
+- **Loading states.** The user also flagged that tab-switches felt frozen. `app/(app)/loading.tsx` gives the content area a skeleton while the server component fetches (the sidebar persists), and a `useLinkStatus` spinner lights the clicked tab instantly.
+
+**Learned / decided:** the same principle that governs safety governs reliability — **don't assume, verify.** "The fallback exists" wasn't the same as "the fallback works"; only probing it proved the 56s problem and the fix. And a free-tier quota is a real production constraint, not a footnote — naming it (and wiring a second provider) is part of shipping something honest.
+
 ### Phase 6 — Docs & submission
-_pending_
+**Intended:** make the AI-first *process* as legible as the product, and hand over something a reviewer can verify in minutes.
+
+**What happened:** wrote the decides-then-builds [`README.md`](README.md) — the safety thesis up front, the reproducible eval number (**236 → 100% / 100%**), the stack with *why*, the data model, the locked-decisions table, and this "what I'd do next." Synced the playbook to the shipped reality (the D11 design pass, the taste columns, the Groq+Mistral resilience) so [`Memory.md`](playbook/Memory.md), [`Phases.md`](playbook/Phases.md), [`Design.md`](playbook/Design.md), [`Architecture.md`](playbook/Architecture.md) and [`PRD.md`](playbook/PRD.md) don't lie about what exists. The commit history, the decision log, and the prompt log are left intact as the visible trail of how this was built with Claude Code.
+
+**Learned / decided:** the docs are a graded artifact, not paperwork — a README that states its limits and an eval anyone can re-run are themselves the CyberGen signal: **evidence over hype.**
 
 ---
 
 ## 4. What I'd do next (kept honest)
-_To be written at the end — the "if I had another day" list. Naming the limits is itself a CyberGen signal: evidence over hype._
+
+The limits are named on purpose — that's the signal.
+
+- **A conversational assistant.** A Mistral-based chat widget (kept off Groq's quota) scoped to *help* — explain a plan, navigate the app — that **defers every safety question to the deterministic guardrail** and never adjudicates safety itself. It was designed and deliberately deferred to protect the submission timeline; building it would extend the "the LLM never decides safety, anywhere" story to a third surface.
+- **Lift the Groq quota.** The free tier's 100k tokens/day is easily exhausted under heavy testing. A paid tier removes the ceiling; the now-wired Mistral fallback softens it. Ideally the app would also *tell* the user when it's running on the fallback.
+- **Richer allergen intelligence.** The synonym map is hand-curated and English-centric. A broader ontology (and regional ingredient names) widens coverage — and the eval harness already exists to prove any gain as a number.
+- **RAG over a curated recipe corpus** — ground generation in real recipes instead of pure synthesis; more realistic plans, fewer regens.
+- **The obvious product polish** — a shopping list from the plan, a single-meal "swap" button in the UI (the engine already regenerates single meals), and a full dark theme.
+- **The FastAPI evidence endpoint.** `/backend` already holds the architecture; deploying it to Render as a live Python `/health` + `/docs` would match CyberGen's FastAPI+LLM stack — a post-core stretch that never sat on the critical path.
+
+None of these were cut for lack of a plan — they were cut to protect a **shipped, provably-safe** core. That order was the point.
 
 ---
 *Sources for the strategy: CyberGen product sites, the "AI-First Developer / Vibe Coder" role, Dr. Armghan's writing, and the Day-1 bootcamp notes. Full reasoning in [`/information/company-information.md`](information/company-information.md).*

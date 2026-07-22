@@ -14,7 +14,7 @@
 | **Database** | Supabase (Postgres) | Data is **relational** (user → plans → meals → ingredients). His rule: relations → Postgres; default to Postgres. |
 | **Auth** | Supabase Auth + Row-Level Security | Real per-user access control, not decoration. |
 | **AI backend** | Next.js Route Handler (server) — *primary* · FastAPI kept as a stretch | Generation + guardrail run server-side on Vercel (one platform, RLS-enforced — see [Memory.md](Memory.md) D10). A FastAPI version lives in `/backend` as documented architecture, deployed to Render only as a post-core "evidence" stretch — matching CyberGen's FastAPI+LLM stack when time allows. |
-| **LLM** | Groq (Llama 3.3 70B) primary · Mistral fallback | Free, fast (speed = "it just works" taste), OpenAI-compatible. Fallback = a small reliability story. |
+| **LLM** | Groq `llama-3.3-70b-versatile` primary · Mistral `mistral-small-latest` fallback | Free, fast (speed = "it just works" taste), OpenAI-compatible. Fallback (activated via `MISTRAL_API_KEY`) = resilience when Groq is down or hits its free daily token cap; the *small* Mistral model is chosen to stay under Vercel's 60s function limit. |
 | **Deploy** | Vercel (frontend + AI route) · Supabase hosted | One platform: the AI call + guardrail run in a Next.js server route on Vercel. Simpler ship, no cold-start, and the route uses the user's session so RLS is enforced. |
 | **Version control** | Git + GitHub | Mandated. Small, meaningful commits = visible AI-first process. |
 | **API testing** | Postman / Thunder Client / route tests | Named in class notes. |
@@ -56,13 +56,15 @@ The generation + guardrail run in a **Next.js server Route Handler on Vercel** (
 
 ```
 profiles          (1 per user)
-  id            uuid  PK → auth.users.id
-  display_name  text
-  diet_type     text          -- omnivore | vegetarian | vegan | keto | ...
-  allergens     text[]         -- ['peanut','shellfish',...] (the user's declared list)
-  weekly_budget numeric
-  num_people    int
-  created_at    timestamptz
+  id                uuid  PK → auth.users.id
+  display_name      text
+  diet_type         text          -- omnivore | vegetarian | vegan | keto | ...
+  allergens         text[]         -- ['peanut','shellfish',...] (declared list — ENFORCED by the guardrail)
+  favorite_cuisines text[]         -- taste hint only (best-effort, NOT enforced)  [migration 0001]
+  disliked_foods    text[]         -- taste hint only (best-effort, NOT enforced)  [migration 0001]
+  weekly_budget     numeric
+  num_people        int
+  created_at        timestamptz
 
 meal_plans        (user 1 → many)
   id            uuid  PK
@@ -156,8 +158,9 @@ Cybergen-internship-task/            ← repo root
 ### API routes (Next.js Route Handlers, server-side on Vercel)
 | Method | Path | Does |
 |---|---|---|
-| `POST` | `/api/generate-plan` | input guardrail → LLM → deterministic output guardrail → returns safe plan + logs events |
+| `POST` | `/api/generate-plan` | input guardrail (injection-screen allergens + taste) → LLM → **best-effort taste pass** (deterministically re-roll disliked meals) → **deterministic output guardrail** (allergens — the authoritative last word) → persist safe plan + log events |
 | — | `lib/guardrails/*` | the eval imports the guardrail directly (no network needed) |
+| — | `lib/taste.ts` | deterministic disliked-food matcher — best-effort only, **never a safety decision** (drives the taste re-roll + snack filter) |
 
 *(The `/backend` FastAPI mirrors these — `POST /generate-plan`, `POST /check`, `GET /health` — kept for the post-core Render stretch.)*
 

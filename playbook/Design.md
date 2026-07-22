@@ -87,4 +87,20 @@ Pairing rationale: Plus Jakarta Sans gives headings a friendly, geometric charac
 - **States:** every data view needs an **empty**, **loading** (skeletons), and **error** state. Empty states are where beginners lose taste points — don't skip them.
 
 ---
-*When building UI in Phase 4, re-read this file and consult the `frontend-design` skill for execution.*
+
+## 5. Design evolution — D11 (SHIPPED, supersedes parts of §1 & §4)
+
+Sections 1–4 above are the *original* fresh-and-clean spec (Phases 0–4). After the core shipped, a user-directed **design pass (locked decision D11)** reshaped the signed-in app into a "Daily Meal"-style **dashboard product**. Where D11 differs from above, **D11 is what shipped:**
+
+- **Palette:** a **pastel base** (lavender `#ECEBFB` / peach `#FCEFE2` / mint `#E3F3EA` / rose `#FCE8EF`) on the `#F8F9FA` canvas, with **sage `#4C7B61` and coral `#FF6B6B` as the *accent*** (not the whole palette). Ink `#1F2933`.
+- **Accent roles (changed):** **sage** = active nav pill **and primary buttons** (Generate, Save); **coral** = reserved for **safety/blocked** states. (Originally the primary CTA was coral — D11 moved primary actions to sage and kept coral for safety.)
+- **App shell:** a **collapsible left sidebar** (Dashboard · Meal Plans · Security Console · Profile) over an `(app)` route group that gates auth once; state persisted in `localStorage`.
+- **Safety Dashboard → "Security Console":** the dark `console-bg` terminal was **re-skinned to a light, on-brand card** with tinted tiles (sage / amber / violet) after user feedback that the dark console read as "scary." Raw `safety_events` log lines are **humanized** into friendly "here's what we caught for you" cards. (So `console-bg`/`console-line` in §1 are retired.)
+- **Legibility pass:** stat-card labels darkened (`#3D4653` semibold / `#6B7280` medium) for contrast on the pastel cards.
+- **Landing hero:** a per-character blur-in animation (`components/ui/soft-blur-in.tsx`, `motion`) — "Eat Healthy, Stay Healthy" — with one catchy line and a sage CTA.
+- **Loading states:** `app/(app)/loading.tsx` skeleton + a `useLinkStatus` spinner on the clicked sidebar tab, so navigation never feels stuck.
+
+What did **not** change: the semantic rule that **safe = green + ✓** and **blocked = danger red** (never coral-as-danger), the fonts (§2), the typography scale (§3), and "every data view needs empty / loading / error states."
+
+---
+*When building UI, re-read this file. §5 (D11) is the current shipped design; §1–4 hold the original rationale and the still-valid type/semantics.*
