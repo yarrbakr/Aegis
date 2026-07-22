@@ -134,4 +134,18 @@
 **Fix applied:** n/a.
 
 ---
+
+### #10 — Sidebar collapse + per-day nutrition + hero one-liner  ·  Design pass  ·  2026-07-22
+**Prompt (summary or verbatim):**
+> "Add a collapse button to minimize this sidebar" · "make this pie chart show the macros of the selected day from the meal plan page and also show which day's macros it is showing" · "that's a lot of text, summarize it in one line, don't make it sound ai or generic, something catchy".
+
+**Output achieved:** all 3 done, `npm run build` green, verified live on cybergen.
+- Sidebar → desktop collapse toggle (chevron), minimizes to the icon rail and back; persisted in localStorage. Collapse + expand both verified.
+- Nutrition donut moved into `WeekView`; it now shows the selected day's macros and names the day ("Nutrition · Wednesday"). Verified Wed 170g → Thu 260g on tab switch. Standalone weekly-nutrition card retired on /meal-plans + /plan/[id] (top row now Budget + Cost-by-day).
+- Hero paragraph → one line: "AI plans your week; a safety shield keeps your allergens off the menu."
+
+**Problems created:** removed `NutritionDonut`/`weeklyMacros` imports from two pages — potential unused-import errors.
+**Fix applied:** cleaned the imports + `macros` vars in both pages; `npm run build` green.
+
+---
 *(Build prompts continue below as we go.)*

@@ -191,3 +191,12 @@
 - **Answers given:** Q1 snacks = curated `lib/snacks.ts` list filtered by the deterministic guardrail (NOT Groq-generated; the weekly PLAN is Groq-generated + screened). Q3 taste prefs est. ~30–45 min, low risk (additive profiles columns, nullable, defaults; only touches onboarding/profile/prompt).
 - **New dependency:** `motion` (^12) — landing hero animation only. Add to Architecture/Rules locked-lib list.
 - **Next:** taste preferences on user's go; then push; Phase 6.
+
+### 2026-07-22 — Session 10: sidebar collapse + per-day nutrition + hero one-liner
+- **Attempted:** 3 tweaks — (1) collapse button to minimize the sidebar; (2) make the Meal Plans nutrition donut show the SELECTED day's macros + name it; (3) shorten the hero paragraph to one catchy, non-generic line.
+- **Result (`npm run build` green, verified live on cybergen):**
+  - **Sidebar collapse:** `components/shell/Sidebar.tsx` — desktop chevron toggle minimizes to the icon rail and back; choice persisted in `localStorage` (`aegis-sidebar-collapsed`). Verified collapse/expand both work.
+  - **Per-day nutrition:** moved the donut into `WeekView` — it now recomputes the selected day's macros and labels it ("Nutrition · Wednesday"). Verified switching Wed (170g) → Thu (260g). Retired the standalone "Weekly nutrition" card on /meal-plans and /plan/[id]; top row is now Budget + Cost-by-day (removed unused `NutritionDonut`/`weeklyMacros` imports).
+  - **Hero copy:** replaced the paragraph with "AI plans your week; a safety shield keeps your allergens off the menu."
+- **Note:** confirmed the landing `motion` animation works on Vercel in principle (motion is a prod dependency, lockfile committed, `next build` green, client-hydrated) — but it's unproven live until we push (all still local on `feat/dashboard-shell`).
+- **Next:** taste preferences on user's go; then push; Phase 6.
