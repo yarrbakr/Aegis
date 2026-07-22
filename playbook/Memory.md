@@ -5,11 +5,11 @@
 ---
 
 ## 📍 Current status
-- **Phase:** Phase 0 *in progress* — local skeleton complete & verified; cloud deploy pending the user's accounts.
-- **Currently working on:** **Locked all-Vercel (D10).** Next: deploy the Next.js skeleton to Vercel (first live URL) + create the Supabase project.
+- **Phase:** **Phase 0 COMPLETE** ✅ — Next.js skeleton is live on Vercel. Moving to Phase 1 (auth + data).
+- **Currently working on:** Awaiting the Supabase **Project URL + anon key** to wire env vars and start Phase 1.
 - **Currently-edited file:** none (between steps).
-- **Live URLs:** none yet (Vercel pending).
-- **Blockers:** user actions — creating the Supabase project (in progress) + importing the repo into Vercel (walking through now).
+- **Live URLs:** **https://aegis-zeta-six.vercel.app** (Vercel, auto-deploys on push to `main`).
+- **Blockers:** need the user's Supabase URL + anon key (project creation in progress) before Phase 1 code.
 - **Git:** remote = `github.com/yarrbakr/Aegis`. **Pushed ✓** — `main` (6 commits, incl. `--no-ff` merge) and `feat/phase-0-skeleton` are live on origin. Workflow: branch-per-feature, commit everything, ask before every push (done for this push).
 
 ---
@@ -37,13 +37,14 @@
 - Created playbook: PRD, Architecture, Rules, Phases, Design, Memory, Prompt.
 - Created CLAUDE.md + Documentary.md.
 - **Phase 0 (local):** scaffolded Next.js 16 + TS + Tailwind at repo root (`npm run build` passes); FastAPI `/backend` with `/health` (smoke-tested → 200); `.gitignore` + `.env.example` (frontend + backend); `git init`, remote set, 4 clean commits + merge to `main`.
+- **Phase 0 (cloud):** ✅ **deployed Next.js skeleton to Vercel — live at https://aegis-zeta-six.vercel.app.** Resolved Vercel's new multi-service auto-detection (it saw `/backend/requirements.txt` and tried to deploy FastAPI too) by switching the **Application Preset to Next.js** → clean single-app build (no Python step). Auto-deploy on push to `main` is wired.
 
 ## 🔨 In progress
-- **Phase 0 (cloud deploy):** ✓ push. → **deploy Next.js to Vercel (first live URL)** → create Supabase project → wire env vars. (No Render — all-Vercel per D10.)
+- **Supabase project** creation (user, in parallel) → paste **Project URL + anon key** → wire env vars → start Phase 1.
 
 ## ⏭️ Next up
-1. **Finish Phase 0 deploy:** deploy to Vercel (live URL) → Supabase project + keys → wire env vars (Phase 1 needs them).
-2. Then **Phase 1** (auth + preferences: run schema/policies, Supabase Auth, onboarding form).
+1. **Phase 1 — auth & data foundation:** create `supabase/schema.sql` + `policies.sql` (tables + RLS) and run them; wire `@supabase/ssr` client; Supabase Auth (sign up / in / out); onboarding form (diet, allergies, budget, # people) → saves to `profiles`.
+2. Then **Phase 2** (core AI generation via the Next.js route).
 
 ## 🐞 Open bugs / issues
 - none yet.
@@ -83,3 +84,10 @@
 - **Errors:** none.
 - **Outputs:** playbook updated — Memory (D2/D5/D7 amended, D10 added), Architecture (flow, stack, deployment, structure), Phases (0/2/3/5, stretch), Documentary (pivot decision + value map).
 - **Next:** Walk the user through the Vercel deploy (first live URL); create Supabase project; wire env vars.
+
+### 2026-07-22 — Session 2c: Phase 0 COMPLETE — skeleton live on Vercel
+- **Attempted:** Deploy the Next.js skeleton to Vercel; user creating the Supabase project in parallel.
+- **Result:** ✅ **Live at https://aegis-zeta-six.vercel.app** — starter page loads, auto-deploy on push to `main` wired. **Phase 0 done** (its "done when" was just the live URL loading).
+- **Errors & fixes:** Vercel's new import UI auto-detected `/backend/requirements.txt` as a second **FastAPI "Web Service"** and defaulted to its multi-service "Services" preset (demanded a `vercel.json`). Fix: changed **Application Preset → Next.js**, which dropped to a clean single-app deploy that ignores `/backend`. Verified the build log showed only `npm install`/`next build` (no `pip`/Python). Guidance for future sessions: keep `/backend` in the repo (documented architecture) but Vercel must stay on the **Next.js** preset, root `./`.
+- **Supabase:** guided the create-project screen — unlink GitHub, save DB password, region Asia-Pacific, **Data API on**, **automatic RLS on** (leave auto-expose as-is; RLS is the gate). Awaiting URL + anon key.
+- **Next:** Receive Supabase URL + anon key → wire `.env.local` + Vercel env → begin Phase 1 (schema + RLS + auth + onboarding).

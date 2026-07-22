@@ -64,7 +64,7 @@ Following Armghan's loop — **Describe → Generate → Run → Observe → Ref
 
 **A decision we revisited — and this is *why* we write decisions down.** The original plan put the AI + guardrail on a separate FastAPI service on Render. Talking it through, **all-Vercel won**: the generation + guardrail now run in a Next.js server route instead, which (1) ships on **one platform** with no flaky free-tier cold-start in front of the evaluator, and (2) runs under the user's Supabase session so **Row-Level Security is enforced automatically** — a stronger security story for a safety-branded app. No user-facing feature changes; the eval even gets better (it tests the *real* shipped guardrail, not a copy). The FastAPI code stays in `/backend` as documented architecture and a *post-core* Render stretch. *Shipped beats ambitious — the simpler, safer design won.* (Full rationale: [Memory.md](playbook/Memory.md) D10.)
 
-**Next (cloud half):** ✓ pushed to GitHub. → create the Supabase project → deploy the Next.js app to Vercel (first live URL) → wire env vars.
+**Cloud half — done:** ✓ pushed to GitHub, ✓ **deployed live to Vercel — https://aegis-zeta-six.vercel.app** (auto-deploys on every push to `main`). One snag worth noting: Vercel's importer spotted the `/backend` FastAPI and tried to deploy it as a *second* service — a neat confirmation that the folder reads as real FastAPI, but not what we wanted. Switching the Application Preset to **Next.js** gave a clean single-app deploy that leaves `/backend` as documentation. **Phase 0 is complete: the empty pipeline is live before a single feature exists** — exactly the de-risk order we set out to follow. Next: Supabase keys → Phase 1.
 
 ### Phase 1 — Auth & data foundation
 _pending_
