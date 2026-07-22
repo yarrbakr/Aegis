@@ -74,7 +74,7 @@ const ingredientSchema = z.object({
 });
 export type GeneratedIngredient = z.infer<typeof ingredientSchema>;
 
-const mealSchema = z.object({
+export const mealSchema = z.object({
   day_of_week: z.coerce.number().int().min(0).max(6),
   meal_type: z.enum(MEAL_TYPES),
   name: z.string().trim().min(1).max(120),
@@ -93,3 +93,8 @@ export const generatedPlanSchema = z.object({
   meals: z.array(mealSchema).min(1).max(40),
 });
 export type GeneratedPlan = z.infer<typeof generatedPlanSchema>;
+
+// Single-meal replacement — returned by the guardrail's regeneration step when
+// one meal is blocked and re-requested: { "meal": { ... } }.
+export const generatedMealSchema = z.object({ meal: mealSchema });
+export type GeneratedSingleMeal = z.infer<typeof generatedMealSchema>;

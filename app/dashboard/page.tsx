@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { GenerateButton } from "@/components/meal/GenerateButton";
+import { usd, usdApprox } from "@/lib/format";
 import type { MealPlan, Profile } from "@/lib/types";
 
 export default async function DashboardPage() {
@@ -79,7 +80,9 @@ export default async function DashboardPage() {
               <div>
                 <dt className="text-[#6B7280]">Weekly budget</dt>
                 <dd className="font-medium">
-                  {profile!.weekly_budget != null ? profile!.weekly_budget : "—"}
+                  {profile!.weekly_budget != null
+                    ? usd(profile!.weekly_budget)
+                    : "—"}
                 </dd>
               </div>
               <div className="col-span-2">
@@ -120,8 +123,10 @@ export default async function DashboardPage() {
                   {latestPlan.total_cost != null ? (
                     <>
                       {" "}
-                      · total ~
-                      <span className="font-mono">{latestPlan.total_cost}</span>
+                      · total{" "}
+                      <span className="font-mono">
+                        {usdApprox(latestPlan.total_cost)}
+                      </span>
                     </>
                   ) : null}
                   .
