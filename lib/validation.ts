@@ -25,11 +25,16 @@ export const COMMON_ALLERGENS = [
 ] as const;
 
 // Validated shape of the onboarding form. Never trust raw form input.
+// Name and budget are REQUIRED: Aegis addresses the user by name and plans
+// against a real budget, so neither is optional.
 export const onboardingSchema = z.object({
-  display_name: z.string().trim().max(60).optional(),
+  display_name: z.string().trim().min(1, "Please enter your name.").max(60),
   diet_type: z.enum(DIET_TYPES),
   allergens: z.array(z.string().trim().min(1)).max(30),
-  weekly_budget: z.coerce.number().positive().max(1_000_000).optional(),
+  weekly_budget: z.coerce
+    .number({ message: "Enter a weekly budget in USD." })
+    .positive("Enter a weekly budget in USD.")
+    .max(1_000_000),
   num_people: z.coerce.number().int().min(1).max(20),
 });
 export type OnboardingInput = z.infer<typeof onboardingSchema>;

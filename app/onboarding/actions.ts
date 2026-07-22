@@ -21,10 +21,10 @@ export async function saveProfile(formData: FormData) {
   const allergens = Array.from(new Set([...checked, ...custom]));
 
   const parsed = onboardingSchema.safeParse({
-    display_name: formData.get("display_name") || undefined,
+    display_name: formData.get("display_name"),
     diet_type: formData.get("diet_type"),
     allergens,
-    weekly_budget: formData.get("weekly_budget") || undefined,
+    weekly_budget: formData.get("weekly_budget"),
     num_people: formData.get("num_people"),
   });
 
@@ -37,10 +37,10 @@ export async function saveProfile(formData: FormData) {
   const { error } = await supabase
     .from("profiles")
     .update({
-      display_name: v.display_name || null,
+      display_name: v.display_name,
       diet_type: v.diet_type,
       allergens: v.allergens,
-      weekly_budget: v.weekly_budget ?? null,
+      weekly_budget: v.weekly_budget,
       num_people: v.num_people,
     })
     .eq("id", user.id);
