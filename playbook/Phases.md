@@ -23,12 +23,12 @@ Time budget: ~7 hours. Phases are sized so that if we run out of time, we still 
 - [ ] Onboarding form: diet type, allergies (multi-select), weekly budget, # people → saves to `profiles`.
 - **Done when:** a logged-in user's preferences persist and reload correctly (RLS verified — can't see others' data).
 
-## Phase 2 — Core AI generation
+## Phase 2 — Core AI generation ✅ DONE (verified locally)
 **Goal: generate and display a weekly plan.**
-- [ ] `POST /api/generate-plan` (Next.js Route Handler): fixed system prompt + user prefs → Groq → structured meal JSON (**Zod**-validated).
-- [ ] Persist plan → meals → ingredients to Supabase (server-side, RLS-enforced via the user's session).
-- [ ] Plan view UI: 7-day grid of meal cards (name, cost, calories).
-- **Done when:** clicking "Generate" returns a saved, displayed weekly plan. (No guardrail yet — that's next.)
+- [x] `POST /api/generate-plan` (Next.js Route Handler): fixed system prompt + user prefs → Groq (Llama 3.3 70B, JSON mode) → structured meal JSON (**Zod**-validated, one repair retry).
+- [x] Persist plan → meals → ingredients to Supabase (server-side, RLS-enforced via the user's session).
+- [x] Plan view UI: 7-day grid of meal cards (name, cost, calories, macros, allergen tags); dashboard view/regenerate section.
+- **Done when:** clicking "Generate" returns a saved, displayed weekly plan. ✅ **Verified:** one click → 21 meals, total ~68.50 within the 120 budget, read back from Supabase under RLS, no console errors. (No guardrail yet — that's Phase 3.)
 
 ## Phase 3 — The trust layer  *(the headline — do NOT skip or defer)*
 **Goal: the app is provably safe.**

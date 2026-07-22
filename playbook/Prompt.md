@@ -38,4 +38,14 @@
 **Fix applied:** (1) used `aegis-tmp`, moved files to root, deleted temp. (2) deleted via PowerShell `Remove-Item -Recurse -Force`. (3) installed with capped ranges, then re-pinned the exact resolved versions.
 
 ---
+
+### #3 — Phase 2: core AI generation (end to end)  ·  Phase 2  ·  2026-07-22
+**Prompt (summary):**
+> User added `GROQ_API_KEY` to `.env.local` and said: build Phase 2 in one go, push the code, and update Phases.md. Build `POST /api/generate-plan` (Groq → Zod-validated meal JSON → persist plan/meals/ingredients under RLS) plus the 7-day plan-grid UI and a generate button, on `feat/generate-plan`.
+
+**Output achieved:** Full pipeline built and **verified live locally**. Route (`nodejs`, `maxDuration=60`): auth → load profile → fixed system prompt with prefs inserted as *data* (injection defense) → Groq Llama 3.3 70B in JSON mode (temp 0.3) → **Zod validation with one repair retry** → persist as the user so RLS enforces ownership. UI: `MealCard`, `PlanGrid` (7-day, horizontal-scroll — page never scrolls sideways), `GenerateButton` (loading + inline error), `/plan/[id]` (reads back under RLS), dashboard view/regenerate section. `npm run build` green. One click produced **21 meals, total ~68.50 within the 120 budget**, macros + allergen tags per card; the model avoided the user's declared allergens (Peanuts/Shellfish/Kiwi); zero console errors. 4 small commits.
+**Problems created:** none functional. Local dev port 3000 was busy → autoPort moved it to 49674 (no impact). CRLF/LF line-ending warnings on commit (cosmetic, Windows).
+**Fix applied:** n/a — built to spec. Note for prod: generation needs `GROQ_API_KEY` added to **Vercel** env (server-side secret) before it works on the live URL.
+
+---
 *(Build prompts continue below as we go.)*
