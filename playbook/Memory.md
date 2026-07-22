@@ -6,7 +6,7 @@
 
 ## 📍 Current status
 - **Phase:** **Phases 3, 4, 5 COMPLETE** ✅ + **5 UX/safety fixes** from the user's live testing (see Session 6). Only **Phase 6 (docs/README + submission)** remains — after the user's design pass.
-- **Currently working on:** **PUSHED** — user authorized the push (2026-07-22). `main` → `origin/main` (19 commits: P3+P4+P5+Session-6 fixes) + all 4 feature branches. `main` now in sync with origin (0 ahead). Vercel auto-deploy triggered. **Next: the design/interactive pass** (user's call), then Phase 6.
+- **Currently working on:** **Design pass — direction LOCKED (Session 7, see D11).** User picked a "Daily Meal"-style **dashboard app shell**: pastel palette + a *hint* of Aegis sage/coral, landing = dashboard, left-sidebar IA = **Dashboard · Meal Plans · Security Console · Profile**, **snack recommendations** (guardrail-screened) replace meal recs, + **taste preferences** added to Profile/onboarding. Build not started yet — next is to confirm stat-card set + palette hex, then build on `feat/dashboard-shell`. (Push through Session 6 already done; in sync with origin.)
 - **Currently-edited file:** none.
 - **Live URLs:** **https://aegis-zeta-six.vercel.app** — now deploying the FULL app (P3 guardrail + P4 dashboard/charts + USD + Session-6 fixes). Generation needs `GROQ_API_KEY` in Vercel (user says it's set). Confirm the Vercel build went green + spot-check live before relying on it.
 - **Blockers:** none.
@@ -28,6 +28,7 @@
 | D8 | **No real payments/bank integrations; not a medical device** | Out of scope + safety. |
 | D9 | **Git workflow: commit every change (explained), branch-per-feature (`feat/*`), ask before every push** | Visible AI-first process + `main` stays deployable. Pinned in [Rules.md §6](Rules.md#6-git-workflow-branch-per-feature--commit-everything--ask-before-push) + CLAUDE.md. |
 | D10 | **All-Vercel is primary: AI generation + deterministic guardrail run in a Next.js server Route Handler. FastAPI/Render demoted to a post-core stretch (a live "evidence" endpoint only).** | (1) One platform → clean ship, no free-tier cold-start in front of the evaluator. (2) The route runs under the user's Supabase session → **RLS enforced automatically** (stronger security story for a safety app). (3) Same guardrail behavior, TypeScript instead of Python — the eval tests the *real* shipped code. FastAPI stays in `/backend` as documented architecture; deploy to Render only after the core ships. |
+| D11 | **Design pivot → "Daily Meal"-style dashboard app shell.** Adopt a **pastel** scheme (lavender/mint/pink/peach cards, dark sidebar) **with a hint of Aegis sage/coral** as accent. Landing = **dashboard** (5 stat cards incl. **≥2 safety/budget**, calories line chart, nutrition report donut, "meal for today", **snack recommendations** — snacks pass the same `screenMeal` guardrail). Left-sidebar IA: **Dashboard · Meal Plans · Security Console · Profile**. Add **taste preferences** (cuisines / include / dislike) to Profile + onboarding, fed to the prompt as *data* (**best-effort — only declared allergens are safety-enforced by the guardrail; dislikes are not a safety guarantee**). | User-directed design pass (Session 7). Reorganizes existing pages into one shell; keeps **safety front-and-center** (dedicated Security Console + safety stat cards) per "trust & safety is the product". Extends D6 — that sage/coral/off-white palette becomes the *accent* on top of the pastel base. |
 
 ---
 
@@ -50,7 +51,7 @@
 - Merge `feat/phase-5-eval` → `main` (P3/P4 already merged). **Push remains ON HOLD** per user (design/interactive changes coming first).
 
 ## ⏭️ Next up
-1. **User's design/color + interactive changes** (their next work) — do these BEFORE pushing.
+1. **Design pass (D11) — dashboard app shell.** (a) confirm final 5 stat-card set + pastel/accent hex with user; (b) build the shell + sidebar nav (Dashboard · Meal Plans · Security Console · Profile) on `feat/dashboard-shell`; (c) wire **taste preferences** into onboarding/Profile + the prompt (as data); (d) add **snack recommendations** (must pass `screenMeal`). Verify live, then push on user's go.
 2. **Phase 6 — docs & submission:** `README.md` (decides-then-builds + stack/data-model + locked-decisions table + "what I'd do next" + live link + the eval number + "built with Claude Code"), finalize Documentary/Prompt/Memory, final deploy check from a fresh browser, email submission (Full Name · Aegis · Live URL · GitHub · 2–3 line description).
 3. When user says go: push `main` → Vercel auto-deploys → verify P3/P4/P5 live in prod (user says `GROQ_API_KEY` is in Vercel now).
 - **Stretch (only if ahead):** deploy `/backend` FastAPI to Render as a live evidence endpoint; single-meal regenerate button; RAG.
@@ -154,3 +155,10 @@
 - **Errors & fixes:** browser-pane clicks unreliable again → used `form_input` + endpoint `fetch` + JS state reads for verification. A compound here-string mis-parsed and merged two commits → `git reset --soft` and recommitted via `-F` message files (4 clean commits: 7e2c7bc auth, c9be1b4 required, bd69669 metrics, 45746a6 free-of).
 - **Outputs & logs:** `npm run build` green; `npm run test:guardrail` **18/18**; `npm run eval` still **100% / 100%**. Live: new plan `62739979…` shows coherent metrics + one-line block log + consistent safe plate.
 - **Next:** merge `fix/ux-and-safety-log` → main (local). Hold push. User does design/interactive pass → Phase 6 → push on their go.
+
+### 2026-07-22 — Session 7: design direction locked (dashboard shell + IA)
+- **Attempted:** user shared a "Daily Meal" dashboard reference (crossed out heart/water/exercise trackers, Message, an extra nav item) and asked (a) is it fully buildable on our stack, and (b) laid out the app vision.
+- **Result:** confirmed **100% buildable on the current stack** — Next.js + Tailwind + shadcn/ui + recharts, **no new libraries**. Locked the design direction as **D11**: pastel palette + Aegis sage/coral *accent*; landing = dashboard; sidebar IA = **Dashboard · Meal Plans · Security Console · Profile**; **snack recommendations** (guardrail-screened) replace the meal-recs panel; **taste preferences** added to Profile + onboarding.
+- **Safety guardrails kept central:** ≥2 of the 5 stat cards are safety/budget; **Security Console** is its own destination; recommended snacks MUST pass the same `screenMeal` guardrail; taste "dislikes" are best-effort prompt hints, **not** a safety guarantee (only declared allergens are enforced).
+- **Logging question answered (user asked):** _build process_ is logged in **Memory.md** (this session log), **Prompt.md** (build prompts → output → problems → fix), **Documentary.md** (phase-boundary narrative), and the **git commit history**; _app runtime_ is logged in the **`safety_events`** table (every guardrail decision: meal_passed / meal_blocked / injection_detected) plus plans/meals/ingredients persisted under **RLS**.
+- **Next:** confirm final stat-card set + palette hex, then build the shell + views on `feat/dashboard-shell`; wire taste prefs + snack recs; verify live; push on user's go; then Phase 6.
