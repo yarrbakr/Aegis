@@ -47,8 +47,8 @@ export function CaloriesLine({ data }: { data: Point[] }) {
 
   return (
     <div>
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="font-display text-base font-semibold text-[#1F2933]">
+      <div className="mb-4 flex items-center justify-between border-b border-[#EEF0F3] pb-3">
+        <h3 className="font-display text-lg font-bold text-[#1F2933]">
           Calories Graph
         </h3>
         <div className="flex items-center gap-1 rounded-full bg-[#F8F9FA] p-0.5">
@@ -68,7 +68,7 @@ export function CaloriesLine({ data }: { data: Point[] }) {
         </div>
       ) : (
         <ResponsiveContainer width="100%" height={220}>
-          <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -12 }}>
+          <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#EEF0F3" vertical={false} />
             <XAxis
               dataKey="label"
@@ -80,7 +80,7 @@ export function CaloriesLine({ data }: { data: Point[] }) {
               tickLine={false}
               axisLine={false}
               tick={{ fontSize: 11, fill: "#9CA3AF" }}
-              width={40}
+              width={48}
             />
             <Tooltip
               formatter={(value) => [`${Number(value)} kcal`, "Calories"]}

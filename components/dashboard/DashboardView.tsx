@@ -174,8 +174,8 @@ export function DashboardView({
           <CaloriesLine data={calorieData} />
         </div>
         <div className="rounded-2xl border border-[#E7E8EC] bg-white p-5">
-          <div className="mb-2 flex items-center justify-between">
-            <h3 className="font-display text-base font-semibold text-[#1F2933]">Report</h3>
+          <div className="mb-4 flex items-center justify-between border-b border-[#EEF0F3] pb-3">
+            <h3 className="font-display text-lg font-bold text-[#1F2933]">Report</h3>
             <span className="text-xs text-[#9CA3AF]">this week</span>
           </div>
           <NutritionDonut protein={macros.protein} carbs={macros.carbs} fat={macros.fat} />
@@ -185,8 +185,8 @@ export function DashboardView({
       {/* Meal for today + Snacks */}
       <div className="mt-5 grid gap-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-[#E7E8EC] bg-white p-5">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="font-display text-base font-semibold text-[#1F2933]">
+          <div className="mb-4 flex items-center justify-between border-b border-[#EEF0F3] pb-3">
+            <h3 className="font-display text-lg font-bold text-[#1F2933]">
               Meal for today
             </h3>
             <span className="text-xs text-[#9CA3AF]">{hasPlan ? todayName : ""}</span>
@@ -230,8 +230,8 @@ export function DashboardView({
         </div>
 
         <div className="rounded-2xl border border-[#E7E8EC] bg-white p-5">
-          <div className="mb-1 flex items-center justify-between">
-            <h3 className="font-display text-base font-semibold text-[#1F2933]">
+          <div className="mb-3 flex items-center justify-between border-b border-[#EEF0F3] pb-3">
+            <h3 className="font-display text-lg font-bold text-[#1F2933]">
               Snack recommendations
             </h3>
             <span className="rounded-full bg-[#EAF1EC] px-2 py-0.5 text-[10px] font-semibold text-[#3B6149]">
