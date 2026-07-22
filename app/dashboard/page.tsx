@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { Profile } from "@/lib/types";
+import { GenerateButton } from "@/components/meal/GenerateButton";
+import type { MealPlan, Profile } from "@/lib/types";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -19,6 +20,19 @@ export default async function DashboardPage() {
 
   const needsOnboarding =
     !profile || (profile.allergens.length === 0 && profile.weekly_budget == null);
+
+  // Most recent plan, if any — powers the "view / regenerate" section.
+  const { data: planData } = await supabase
+    .from("meal_plans")
+    .select("id, created_at, total_cost, status")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const latestPlan = planData as Pick<
+    MealPlan,
+    "id" | "created_at" | "total_cost" | "status"
+  > | null;
 
   return (
     <main className="min-h-dvh bg-[#F8F9FA] px-4 py-10 text-[#1F2933]">
@@ -95,9 +109,50 @@ export default async function DashboardPage() {
           </div>
         )}
 
+        {!needsOnboarding ? (
+          <div className="mt-6 rounded-2xl border border-[#E5E7EB] bg-white p-6">
+            <h2 className="font-semibold">Your meal plan</h2>
+            {latestPlan ? (
+              <>
+                <p className="mt-1 text-sm text-[#6B7280]">
+                  Latest plan generated{" "}
+                  {new Date(latestPlan.created_at).toLocaleDateString()}
+                  {latestPlan.total_cost != null ? (
+                    <>
+                      {" "}
+                      · total ~
+                      <span className="font-mono">{latestPlan.total_cost}</span>
+                    </>
+                  ) : null}
+                  .
+                </p>
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <Link
+                    href={`/plan/${latestPlan.id}`}
+                    className="inline-block rounded-[10px] bg-[#FF6B6B] px-4 py-2 text-sm font-semibold text-white hover:bg-[#FA5252]"
+                  >
+                    View this week →
+                  </Link>
+                  <GenerateButton variant="secondary" label="Generate a new week" />
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="mt-1 text-sm text-[#6B7280]">
+                  Generate a full week of meals tailored to your diet, budget,
+                  and — above all — your allergies.
+                </p>
+                <div className="mt-4">
+                  <GenerateButton variant="primary" label="Generate my week" />
+                </div>
+              </>
+            )}
+          </div>
+        ) : null}
+
         <p className="mt-8 text-xs text-[#6B7280]">
-          Meal generation arrives next (Phase 2). Aegis filters declared allergens; it is not a
-          medical device.
+          Aegis filters your declared allergens; it is not a medical device and
+          does not give medical or nutritional advice.
         </p>
       </div>
     </main>
