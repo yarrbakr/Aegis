@@ -45,11 +45,11 @@ Time budget: ~7 hours. Phases are sized so that if we run out of time, we still 
 - [x] Apply [Design.md](Design.md): palette + fonts (Plus Jakarta Sans / Inter / JetBrains Mono), empty/loading/error states.
 - **Done when:** the app matches the design spec and the Safety Dashboard tells the safety story at a glance. ✅ **Verified live:** console renders 21/21 + event log, charts draw, USD everywhere, safe badges on every card, no sideways page scroll, zero console errors.
 
-## Phase 5 — Evidence & eval
+## Phase 5 — Evidence & eval ✅ DONE
 **Goal: a number that proves it works.**
-- [ ] `eval` script (TypeScript/node): run N generations across allergy profiles, assert zero unsafe meals pass the guardrail, print **catch rate**. Tests the *real* shipped `lib/guardrails` code (not a copy).
-- [ ] Save the eval output (screenshot/log) for the README.
-- **Done when:** the eval prints a clean catch-rate figure (target 100%).
+- [x] `eval` script (`lib/eval/run-eval.ts`, `npm run eval`): a labeled corpus of unsafe + safe meals across 14 allergy profiles, run through the **real shipped** `screenMeal` (not a copy). Unsafe meals hide a real allergen 3 ways (tag / **untagged** ingredient / meal-name-only). Prints **catch rate** + specificity; exits non-zero on any miss.
+- [x] Saved the eval output for the README → `lib/eval/RESULTS.md`.
+- **Done when:** the eval prints a clean catch-rate figure (target 100%). ✅ **236 meals (180 unsafe / 56 safe) → CATCH RATE 180/180 = 100.0%, SPECIFICITY 56/56 = 100.0%.**
 
 ## Phase 6 — Docs & submission
 **Goal: the AI-first process is visible and everything is submitted.**

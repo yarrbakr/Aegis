@@ -115,7 +115,13 @@ Alongside it, the numbers the brief actually asks for: a **budget meter** (spend
 **Verified, not assumed:** live browser pass — the console renders with 21/21 screened and a real event log, the charts draw, USD is everywhere, every card shows its safe badge, and the page never scrolls sideways (Design.md's grid rule). Zero console errors. Together Phases 3–4 make Aegis demonstrably *"weekly meal plans based on the user's preferences, budget, and dietary requirements"* — with the dietary requirement enforced by code, not hope.
 
 ### Phase 5 — Evidence & eval
-_pending_
+**Intended:** stop *asserting* the app is safe and *measure* it — one reproducible number that a reviewer can re-run.
+
+**What happened:** wrote `lib/eval/run-eval.ts` (`npm run eval`) — a harness that builds a **labeled** corpus and runs every item through the **real shipped** `screenMeal()`, not a reimplementation. For 14 allergy profiles (each common allergen, two custom ones, and multi-allergen households like coeliac+dairy), it plants a real allergen-containing food three ways: correctly tagged, **untagged** (the model "forgot"), and hidden only in the meal name. It also feeds in meals that are safe by construction. Because the unsafe foods are an *independent* list — not the guardrail's own synonym table — this measures real coverage rather than grading the guardrail against itself. Two numbers fall out: **catch rate** (unsafe meals blocked — the safety metric, target 100%, and the process exits non-zero on a single miss) and **specificity** (safe meals correctly allowed — false positives are only a UX cost).
+
+**The number:** **236 meals (180 unsafe, 56 safe) across 14 profiles → 100.0% catch rate, 100.0% specificity.** Every unsafe meal was blocked, including the untagged and name-only cases that a tag-only checker would miss. Output saved to `lib/eval/RESULTS.md` for the README. This is the CyberGen signal in one line: *evidence over hype* — the safety claim is now a figure anyone can reproduce with one command.
+
+**Learned / decided:** kept the eval **deterministic and offline** on purpose — it tests the guardrail, which is the thing that must be provably correct, not the LLM's mood on a given call. It runs with Node's native type-stripping (no test framework, no API key), so re-running the evidence costs nothing.
 
 ### Phase 6 — Docs & submission
 _pending_
