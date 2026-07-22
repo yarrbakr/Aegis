@@ -104,4 +104,34 @@
 **Fix applied:** (1) split `DashboardView` and rendered it with sample data on a throwaway `/design-preview` route (no auth/DB) to screenshot, then deleted it — never entered credentials. (2) a full `npm run build` confirmed disk was clean. (3) `rm -rf .next && npm run build` → green.
 
 ---
+
+### #8 — Design feedback round 1 (5 items)  ·  Design pass  ·  2026-07-22
+**Prompt (summary or verbatim):**
+> User tested the new dashboard (as a `cybergen` account) and flagged 5 things: (1) the search bar doesn't work; (2) panel headings hard to catch — match the reference; (3) the Meal Plans week is clustered — wants a roomier layout (idea: vertical days → click to reveal); (4) the Security Console is too black/scary; (5) the "Recent events" look like raw model logs. Then chose **day tabs** for the layout and **remove** for the search.
+
+**Output achieved:** all 5 done, `npm run build` green, verified live on the real cybergen plan.
+- Headings → bold + underline rule; fixed the calorie chart's clipped Y-axis (width 40→48).
+- Security Console rewritten from the dark terminal to a light on-brand card (sage/amber/violet tiles); applies to /security and /plan/[id].
+- Safety log → friendly activity cards derived from `event_type` + `allergen` (catches framed positively), no raw "attempt/placeholder" noise.
+- Meal Plans → `components/meal/WeekView.tsx` day-tabs (opens on today, roomy 3-card day); retired `PlanGrid`.
+- Removed the search field, then the whole `Topbar` (it only duplicated the sidebar user block).
+
+**Problems created:** (1) a transient mismatch when clicking a day tab in the throwaway `/design-preview` (looked like active≠content). (2) after deleting the temp preview route, `next build` tripped on a stale generated type in `.next`.
+**Fix applied:** (1) not a real bug — verified live on the cybergen account, tab switching swaps the day correctly (Wed→Fri). (2) `rm -rf .next && npm run build` → green.
+
+---
+
+### #9 — Legibility pass + animated landing hero  ·  Design pass  ·  2026-07-22
+**Prompt (summary or verbatim):**
+> "The highlighted details [stat-card sub-labels] should be caught by the eye in the first look… make those more obvious and the same in the rest of the web app." Plus: animate the landing hero (provided a `SoftBlurIn` motion component) with "Eat Healthy, Stay Healthy" / "yours truly, Aegis". Plus 4 questions (snacks Groq-or-guesses, where's the eval, taste-prefs time/risk, the animation).
+
+**Output achieved:** `npm run build` green, verified live.
+- **Legibility:** stat-card label → `#3D4653` semibold, sub → `#6B7280` medium (was #6B7280 / #9CA3AF); same darkening on the Security Console tiles.
+- **Landing animation:** installed **`motion`**, added `components/ui/soft-blur-in.tsx` (per-char blur-in, respects reduced-motion), rewrote `app/page.tsx` hero — animated "Eat Healthy," / "Stay Healthy" + "yours truly, Aegis"; kept the safety hook as subhead; CTA → sage. No console errors.
+- **Answers:** snacks = curated `lib/snacks.ts` filtered by the deterministic guardrail (NOT Groq; the weekly plan IS Groq-generated + screened); eval = `npm run eval` (`lib/eval/run-eval.ts`) → re-ran **236 meals / 100% / 100%**; taste prefs ≈ 30–45 min, low risk (additive nullable `profiles` columns).
+
+**Problems created:** none — build green, no console errors, motion works with React 19 / Next 16.
+**Fix applied:** n/a.
+
+---
 *(Build prompts continue below as we go.)*
