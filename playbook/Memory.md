@@ -6,11 +6,11 @@
 
 ## 📍 Current status
 - **Phase:** Phase 0 *in progress* — local skeleton complete & verified; cloud deploy pending the user's accounts.
-- **Currently working on:** Deploy handoff (push → Vercel → Render → Supabase). Awaiting push permission + the user's account setup.
+- **Currently working on:** Push done ✓. Deciding FastAPI hosting (Render vs all-Vercel fallback); then Vercel deploy + Supabase keys.
 - **Currently-edited file:** none (between steps).
 - **Live URLs:** none yet (Vercel / Render pending).
-- **Blockers:** (1) need the user's OK to push to origin; (2) need the user to create the Supabase project and connect Vercel + Render.
-- **Git:** initialized; remote = `github.com/yarrbakr/Aegis`. 5 commits on `main` (incl. `--no-ff` merge of `feat/phase-0-skeleton`). **Nothing pushed yet** — waiting on permission (D9). Workflow: branch-per-feature, commit everything, **ask before every push**.
+- **Blockers:** (1) FastAPI-hosting decision (Render vs fold into Next.js route); (2) user creating the Supabase project (in progress) + connecting Vercel.
+- **Git:** remote = `github.com/yarrbakr/Aegis`. **Pushed ✓** — `main` (6 commits, incl. `--no-ff` merge) and `feat/phase-0-skeleton` are live on origin. Workflow: branch-per-feature, commit everything, ask before every push (done for this push).
 
 ---
 
