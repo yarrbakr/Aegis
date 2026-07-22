@@ -5,11 +5,11 @@
 ---
 
 ## 📍 Current status
-- **Phase:** **Phase 0 COMPLETE** ✅ — Next.js skeleton is live on Vercel. Moving to Phase 1 (auth + data).
-- **Currently working on:** Awaiting the Supabase **Project URL + anon key** to wire env vars and start Phase 1.
-- **Currently-edited file:** none (between steps).
-- **Live URLs:** **https://aegis-zeta-six.vercel.app** (Vercel, auto-deploys on push to `main`).
-- **Blockers:** need the user's Supabase URL + anon key (project creation in progress) before Phase 1 code.
+- **Phase:** **Phase 1 core done** ✅ — auth + onboarding verified end-to-end (local). Pending 2 user actions to ship it live.
+- **Currently working on:** Handing off 2 user actions: (1) turn OFF Supabase email confirmation, (2) add the 2 `NEXT_PUBLIC` env vars in Vercel. Then merge → push → deploy.
+- **Currently-edited file:** none (feat/auth committed at `4f4659f`).
+- **Live URLs:** **https://aegis-zeta-six.vercel.app** (skeleton; auth deploys once Vercel env vars are added).
+- **Blockers:** deployed auth needs (1) email-confirm OFF in Supabase, (2) `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` set in Vercel. Test account: `aegisdemo2026@gmail.com`.
 - **Git:** remote = `github.com/yarrbakr/Aegis`. **Pushed ✓** — `main` (6 commits, incl. `--no-ff` merge) and `feat/phase-0-skeleton` are live on origin. Workflow: branch-per-feature, commit everything, ask before every push (done for this push).
 
 ---
@@ -38,13 +38,15 @@
 - Created CLAUDE.md + Documentary.md.
 - **Phase 0 (local):** scaffolded Next.js 16 + TS + Tailwind at repo root (`npm run build` passes); FastAPI `/backend` with `/health` (smoke-tested → 200); `.gitignore` + `.env.example` (frontend + backend); `git init`, remote set, 4 clean commits + merge to `main`.
 - **Phase 0 (cloud):** ✅ **deployed Next.js skeleton to Vercel — live at https://aegis-zeta-six.vercel.app.** Resolved Vercel's new multi-service auto-detection (it saw `/backend/requirements.txt` and tried to deploy FastAPI too) by switching the **Application Preset to Next.js** → clean single-app build (no Python step). Auto-deploy on push to `main` is wired.
+- **Phase 1 (DB):** applied `schema.sql` + `policies.sql` to Supabase via the session pooler — 5 tables, **RLS ON on all**, 8 policies, 2 triggers (verified).
+- **Phase 1 (auth):** email/password auth (`@supabase/ssr`), `/login` (sign in/up + error surfacing), `/auth/signout`, protected `/dashboard`, `/onboarding` form → `profiles` (zod-validated, RLS-enforced), rebuilt landing. **Verified live locally:** signup→onboarding→dashboard persists; route protection works; custom-allergen merge works. Next 16 `middleware`→`proxy` migration done.
 
 ## 🔨 In progress
-- **Supabase project** creation (user, in parallel) → paste **Project URL + anon key** → wire env vars → start Phase 1.
+- **Ship Phase 1 live:** user turns off email confirmation + adds the 2 Vercel env vars → merge `feat/auth`→`main` → push (auto-deploy) → verify auth on the live URL.
 
 ## ⏭️ Next up
-1. **Phase 1 — auth & data foundation:** create `supabase/schema.sql` + `policies.sql` (tables + RLS) and run them; wire `@supabase/ssr` client; Supabase Auth (sign up / in / out); onboarding form (diet, allergies, budget, # people) → saves to `profiles`.
-2. Then **Phase 2** (core AI generation via the Next.js route).
+1. Deploy Phase 1 (above) and verify auth on the live site.
+2. **Phase 2 — core AI generation:** `POST /api/generate-plan` (Groq) → structured meal JSON (Zod) → persist plan/meals/ingredients → 7-day plan grid UI.
 
 ## 🐞 Open bugs / issues
 - none yet.
@@ -91,3 +93,10 @@
 - **Errors & fixes:** Vercel's new import UI auto-detected `/backend/requirements.txt` as a second **FastAPI "Web Service"** and defaulted to its multi-service "Services" preset (demanded a `vercel.json`). Fix: changed **Application Preset → Next.js**, which dropped to a clean single-app deploy that ignores `/backend`. Verified the build log showed only `npm install`/`next build` (no `pip`/Python). Guidance for future sessions: keep `/backend` in the repo (documented architecture) but Vercel must stay on the **Next.js** preset, root `./`.
 - **Supabase:** guided the create-project screen — unlink GitHub, save DB password, region Asia-Pacific, **Data API on**, **automatic RLS on** (leave auto-expose as-is; RLS is the gate). Awaiting URL + anon key.
 - **Next:** Receive Supabase URL + anon key → wire `.env.local` + Vercel env → begin Phase 1 (schema + RLS + auth + onboarding).
+
+### 2026-07-22 — Session 3: Phase 1 — schema applied + auth/onboarding built & verified
+- **Attempted:** Apply schema/policies to Supabase; build the Supabase client wiring, email/password auth, onboarding, protected dashboard; verify the whole flow live in the browser.
+- **Result:** ✅ DB applied (5 tables, RLS ON on all, 8 policies, 2 triggers). Auth built and `npm run build` green. **Live browser test passed:** signup created a user + profile (via trigger); route protection redirects `/dashboard`→`/login`; error round-trip works. After confirming the test user in the DB, full happy path verified: sign in → dashboard → onboarding (Peanuts+Shellfish, custom "kiwi", budget 120, people 2) → **saved & persisted**, dashboard shows the prefs. RLS-enforced writes work.
+- **Errors & fixes:** (1) `SUPABASE_DB_URL` needed the **Session pooler** (IPv4), not Direct (IPv6-only on free tier). (2) test email `@aegis.app` rejected by Supabase → used a gmail. (3) sign-in blocked by **"Email not confirmed"** — project still has email confirmation ON; confirmed the test user via `auth.users.email_confirmed_at` to finish testing; **user must turn the toggle OFF** for real signups. (4) Next 16 `middleware`→`proxy` rename.
+- **Outputs:** commits `7531a44` (schema, merged to main), `4f4659f` (feat/auth). Test account `aegisdemo2026@gmail.com` (deletable).
+- **Next:** user (1) turns off email confirmation, (2) adds `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` in Vercel → merge `feat/auth`→`main` → push (auto-deploy) → verify live → Phase 2.
