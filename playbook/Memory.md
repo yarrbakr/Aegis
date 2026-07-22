@@ -5,12 +5,12 @@
 ---
 
 ## 📍 Current status
-- **Phase:** **Phases 3, 4, 5 COMPLETE** ✅ + **5 UX/safety fixes** from the user's live testing (see Session 6). Only **Phase 6 (docs/README + submission)** remains — after the user's design pass.
+- **Phase:** **Phases 0–5 COMPLETE** ✅ + design pass (D11) + taste preferences + resilience hardening, all shipped. **Phase 6 (docs/README + submission) IN PROGRESS** — README written, playbook synced to reality (Session 14). Remaining: final fresh-browser deploy check + the submission email.
 - **Currently working on:** **TASTE PREFERENCES — SHIPPED & PUSHED (Sessions 12–12c, 2026-07-22).** The last vision piece is live. `favorite_cuisines` + `disliked_foods` on `profiles`, surfaced in onboarding + Profile, injection-screened, fed to the plan prompt, and used to filter dashboard snacks. **Migration applied to the live DB** (via pooler; both columns verified). Dislikes are **deterministically enforced** (best-effort TASTE PASS re-rolls disliked meals BEFORE the allergen guardrail — guardrail stays the authoritative last word; safety never traded for taste). **User confirmed the fix works live, authorized the push.** Merged `feat/taste-preferences` → `main` (`--no-ff`, merge `79b1d8a`, 7 commits, 17 files) and **pushed** (`6d58469..79b1d8a`) → Vercel auto-deploy triggered. Gate before merge: `build` green, `test:guardrail` **27/27**, `eval` **236 → 100%/100%**. **Only Phase 6 (docs/README + submission — "a few minor things") remains.**
 - **Currently-edited file:** none.
 - **Live URLs:** **https://aegis-zeta-six.vercel.app** — now deploying the FULL app (P3 guardrail + P4 dashboard/charts + USD + Session-6 fixes). Generation needs `GROQ_API_KEY` in Vercel (user says it's set). Confirm the Vercel build went green + spot-check live before relying on it.
 - **Blockers:** none.
-- **Git:** remote = `github.com/yarrbakr/Aegis`. **`origin/main` = `650e1c7`** (taste prefs `79b1d8a` + loading/LLM-UX fix `650e1c7`, both merged + pushed). `feat/taste-preferences` + `fix/loading-and-llm-ux` pushed. In sync. Workflow: branch-per-feature, commit everything, ask before every push. No new runtime deps.
+- **Git:** remote = `github.com/yarrbakr/Aegis`. **`origin/main` = `117f6d6`** (through the faster-Mistral fallback). Merged + pushed: `feat/taste-preferences`, `fix/loading-and-llm-ux`, `fix/faster-mistral-fallback`. Phase-6 docs on `docs/phase-6` (pending merge/push). Workflow: branch-per-feature, commit everything, ask before every push. No new runtime deps.
 - **Eval number (for README):** `npm run eval` → **236 meals / 14 profiles → 100.0% catch rate, 100.0% specificity** (saved in `lib/eval/RESULTS.md`).
 
 ---
@@ -255,3 +255,17 @@
 - **⚠️ Finding:** the Mistral generation took **~56s** (vs Groq ~13s) — dangerously close to Vercel's `maxDuration=60`. Fallback is fine for a single-pass gen but risks timeout if a regen/re-roll is needed. Logged in Open bugs; recommended switching `MISTRAL_MODEL` → `mistral-small-latest` (faster). Awaiting user's call.
 - **Reminder to user:** add `MISTRAL_API_KEY` to **Vercel** env too (not just `.env.local`) so the live fallback works.
 - **Next:** (optional) faster fallback model; user adds Mistral key to Vercel; then **Phase 6** (README + submission).
+
+### 2026-07-22 — Session 13c: faster Mistral fallback model (pushed)
+- **Attempted:** user OK'd swapping the fallback to a faster model.
+- **Result:** verified `mistral-small-latest` runs a full plan in **~32s** (vs ~56s for large), valid JSON, honored allergen + dislike (quirk: returned 24 meals not 21 — harmless, schema allows ≤40 and the guardrail screens all). Changed `MISTRAL_MODEL` → `mistral-small-latest` (`lib/llm/groq.ts`). Merged `fix/faster-mistral-fallback` → `main` (merge **`117f6d6`**) and **pushed**.
+- **Next:** Phase 6 docs + README.
+
+### 2026-07-22 — Session 14: Phase 6 — README + full playbook sync
+- **Attempted:** user: "push the mistral swap [done, 13c], make sure ALL playbook docs + CLAUDE.md + Documentary.md capture everything, and go ahead with Phase 6. Hold the chatbot."
+- **Result:** on `docs/phase-6`:
+  - **`README.md` created** — decides-then-builds: safety thesis, the two guardrails, the reproducible eval (**236 → 100%/100%**), stack-with-why, data model, locked-decisions table, run instructions, boundaries, "what I'd do next" (incl. the deferred chatbot), "built with Claude Code."
+  - **Playbook synced to reality:** Phases.md (0/1 checked, 3 → 27/27 + Mistral active, 4 Security Console re-skin note, new **Phase 5.5** post-plan section, Phase 6 in progress); Design.md (**§5 D11 evolution** — pastel + sage-primary + light Security Console, supersedes the coral-CTA/dark-console spec); Architecture.md (profiles taste columns, LLM row → mistral-small, taste pass + `lib/taste.ts` in the routes table); PRD.md (taste prefs + snacks + D11 shell in features; chatbot in stretch); CLAUDE.md (commands → real `test:guardrail`/`eval`, new LLM section).
+  - **Documentary.md:** new "Hardening — the day the tokens ran out" section (the 502 → Groq TPD cap → Mistral activation → small-model choice → loading states) + Phase 6 section + the honest "What I'd do next".
+- **Gate:** `npm run build` green (docs-only + README; no code change). **Chatbot deferred per user.**
+- **Next:** merge `docs/phase-6` → main + push; final fresh-browser deploy check; submission email (Full Name · Aegis · live URL · GitHub · 2–3 lines).

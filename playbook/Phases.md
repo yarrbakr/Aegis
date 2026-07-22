@@ -6,22 +6,22 @@ Time budget: ~7 hours. Phases are sized so that if we run out of time, we still 
 
 ---
 
-## Phase 0 — Setup & skeleton deploy  *(de-risk everything first)*
+## Phase 0 — Setup & skeleton deploy ✅ DONE  *(de-risk everything first)*
 **Goal: a live, empty frontend before any features exist.** (All-Vercel — D10.)
 - [x] Init Next.js (TypeScript + Tailwind) at repo root; `git init` + push to GitHub. (shadcn added when we build UI.)
 - [x] Minimal FastAPI in `/backend` with `GET /health` (kept for the post-core Render stretch).
 - [x] `.env.example` committed (frontend + backend).
-- [ ] Create Supabase project; grab URL + anon key.
-- [ ] Deploy Next.js → **Vercel** (live URL works).
-- [ ] Wire env vars (Supabase URL + anon key) in Vercel + `.env.local`.
-- **Done when:** the live Vercel URL loads.
+- [x] Create Supabase project; grab URL + anon key.
+- [x] Deploy Next.js → **Vercel** (live URL works).
+- [x] Wire env vars (Supabase URL + anon key) in Vercel + `.env.local`.
+- **Done when:** the live Vercel URL loads. ✅ Live at https://aegis-zeta-six.vercel.app.
 
-## Phase 1 — Auth & data foundation
+## Phase 1 — Auth & data foundation ✅ DONE (verified live)
 **Goal: a user can log in and save their preferences.**
-- [ ] Run `schema.sql` + `policies.sql` in Supabase (all tables + RLS).
-- [ ] Supabase Auth: sign up / log in / log out.
-- [ ] Onboarding form: diet type, allergies (multi-select), weekly budget, # people → saves to `profiles`.
-- **Done when:** a logged-in user's preferences persist and reload correctly (RLS verified — can't see others' data).
+- [x] Run `schema.sql` + `policies.sql` in Supabase (all tables + RLS).
+- [x] Supabase Auth: sign up / log in / log out.
+- [x] Onboarding form: diet type, allergies (multi-select), weekly budget, # people → saves to `profiles`.
+- **Done when:** a logged-in user's preferences persist and reload correctly (RLS verified — can't see others' data). ✅ Verified in production.
 
 ## Phase 2 — Core AI generation ✅ DONE (verified locally)
 **Goal: generate and display a weekly plan.**
@@ -35,12 +35,12 @@ Time budget: ~7 hours. Phases are sized so that if we run out of time, we still 
 - [x] **Output guardrail** (`lib/guardrails/allergen.ts`): scan each meal against the user's `allergens` — **defense in depth**: not just `ingredients.allergen_tags` but ingredient names + meal text, synonym-expanded. Unsafe → block, log `meal_blocked`, regenerate (≤3, ≤12/plan), safe placeholder if still unsafe. Safe → log `meal_passed`. `safety_status` stamped per meal.
 - [x] **Input guardrail** (`lib/guardrails/injection.ts`): screen free-text prefs for injection patterns; drop from prompt; log `injection_detected`.
 - [x] Visible **"✓ allergen-safe"** badge on every meal card (+ "↻ regenerated for safety" note).
-- [x] Mistral fallback wired into the LLM client (optional — used if `MISTRAL_API_KEY` set).
-- **Done when:** we can force an unsafe suggestion and watch it get blocked + regenerated, with an event logged. ✅ **Verified:** `npm run test:guardrail` = **14/14 (100%)** incl. untagged-allergen catches; live generation = 21 meals screened, 21 passed, 0 unsafe served, `safety_events` logged & read back, no console errors. Also: currency switched to **USD** throughout.
+- [x] Mistral fallback wired into the LLM client (`MISTRAL_API_KEY`) — **activated in Session 13b**; fallback model is `mistral-small-latest` (fast enough to stay under Vercel's 60s limit — Session 13c).
+- **Done when:** we can force an unsafe suggestion and watch it get blocked + regenerated, with an event logged. ✅ **Verified:** `npm run test:guardrail` — originally **14/14**, now **27/27** after the taste additions; live generation = 21 meals screened, 21 passed, 0 unsafe served, `safety_events` logged & read back, no console errors. Also: currency switched to **USD** throughout.
 
 ## Phase 4 — Visualization & taste ✅ DONE (verified live)
 **Goal: it looks considered and the safety is *visible*.**
-- [x] **Safety Dashboard** (from `safety_events`): meals screened / passed / blocked+regen / injections caught / allergens watched + live event log. Dark console-styled. On the plan page (scoped) and dashboard (lifetime).
+- [x] **Safety Dashboard** (from `safety_events`): meals screened / passed / blocked+regen / injections caught / allergens watched + live event log. Originally dark console-styled; **re-skinned to a light, on-brand "Security Console" card in the D11 design pass** (per user feedback it read as too scary), with the raw logs humanized into friendly cards. On the plan page (scoped) and dashboard (lifetime).
 - [x] **Budget bar chart** (per-day cost + daily-budget line) + **budget meter** (spend vs weekly budget). **Nutrition donut** (weekly macros). Recharts, USD.
 - [x] Apply [Design.md](Design.md): palette + fonts (Plus Jakarta Sans / Inter / JetBrains Mono), empty/loading/error states.
 - **Done when:** the app matches the design spec and the Safety Dashboard tells the safety story at a glance. ✅ **Verified live:** console renders 21/21 + event log, charts draw, USD everywhere, safe badges on every card, no sideways page scroll, zero console errors.
@@ -51,10 +51,17 @@ Time budget: ~7 hours. Phases are sized so that if we run out of time, we still 
 - [x] Saved the eval output for the README → `lib/eval/RESULTS.md`.
 - **Done when:** the eval prints a clean catch-rate figure (target 100%). ✅ **236 meals (180 unsafe / 56 safe) → CATCH RATE 180/180 = 100.0%, SPECIFICITY 56/56 = 100.0%.**
 
-## Phase 6 — Docs & submission
+## Phase 5.5 — Post-plan, user-directed work ✅ DONE (verified)  *(not in the original plan — added after the core shipped)*
+**Goal: turn the proven-safe core into a real product, and finish the brief.**
+- [x] **Design pass (D11):** app shell with a collapsible sidebar over an `(app)` route group; pastel palette with sage/coral as the accent; pastel dashboard (stat cards, calories chart, macro donut, "meal for today", guardrail-screened **snack recommendations**); day-tabs Meal Plans with a per-day nutrition donut; light Security Console + humanized events; animated landing hero. **The guardrail source was never touched** — every merge gated on `build` + `test:guardrail` + `eval 100%/100%`.
+- [x] **Taste preferences:** `favorite_cuisines` + `disliked_foods` on `profiles` (migration applied), surfaced in onboarding + Profile, **injection-screened**, fed to the prompt as best-effort data. Dislikes are **deterministically enforced** — a meal containing a disliked food is re-rolled *before* the allergen guardrail, so safety stays the authoritative last word and is never traded for taste.
+- [x] **Resilience & UX:** navigation loading states (`loading.tsx` skeleton + `useLinkStatus` tab spinner); friendly "at capacity" message on a provider rate-limit (429, not a scary 502); single-meal calls capped at 2000 max_tokens; **Mistral fallback activated** (`mistral-small-latest`).
+- **Done when:** the app reads as a product and honors preferences/budget/dietary + taste, with the guardrail untouched. ✅ Verified; guardrail number held at 100%/100% throughout.
+
+## Phase 6 — Docs & submission 🔨 IN PROGRESS
 **Goal: the AI-first process is visible and everything is submitted.**
-- [ ] `README.md`: decides-then-builds — stack + data model + "locked decisions" table + "what I'd do next" + live link + eval number + "built with Claude Code" note.
-- [ ] Finalize [Documentary.md](../Documentary.md), [Prompt.md](Prompt.md), [Memory.md](Memory.md).
+- [x] `README.md`: decides-then-builds — stack + data model + "locked decisions" table + "what I'd do next" + live link + eval number + "built with Claude Code" note.
+- [x] Finalize [Documentary.md](../Documentary.md), [Prompt.md](Prompt.md), [Memory.md](Memory.md).
 - [ ] Final deploy check: every submitted link works from a fresh browser.
 - [ ] Email submission: Full Name · Project Title (Aegis) · Live URL · GitHub link · 2–3 line description.
 - **Done when:** submitted, and all links verified working.

@@ -194,4 +194,18 @@
 **Fix applied:** it is (Next 16); build compiled clean. Left the Groq-cap + Mistral-key items as flagged user actions (can't set their secrets/env).
 
 ---
+
+### #14 — Faster Mistral fallback + Phase 6 (README + playbook sync)  ·  2026-07-22
+**Prompt (summary):**
+> "Do the [mistral-small] swap and tell me if we can add a Mistral chatbot." → then: "push the mistral swap, make sure ALL playbook docs + CLAUDE.md + Documentary.md capture everything, go ahead with Phase 6, hold the chatbot."
+
+**Output achieved:**
+- Verified `mistral-small-latest` = ~32s full plan (vs ~56s large), valid JSON, honored allergen + dislike → `MISTRAL_MODEL` swap; merged + pushed (`117f6d6`).
+- **Chatbot:** answered (feasible; Mistral base, Groq stays primary for planning; MUST defer safety to the deterministic guardrail — never adjudicate). **Deferred per user.**
+- **Phase 6:** wrote `README.md` (decides-then-builds + eval number + locked decisions + what's-next). Synced Phases/Design/Architecture/PRD/CLAUDE to the shipped reality (D11 design, taste columns, Groq+Mistral). Documentary got the "day the tokens ran out" hardening section + Phase 6 + "what I'd do next".
+
+**Problems created:** Design.md and Phases.md had drifted (dark console / coral CTA / unchecked P0-P1 boxes) vs. what actually shipped.
+**Fix applied:** added Design.md §5 (D11 supersedes) rather than rewriting; checked P0/P1, added Phase 5.5, updated counts (14/14 → 27/27). Build green (docs-only).
+
+---
 *(Build prompts continue below as we go.)*
