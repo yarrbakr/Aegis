@@ -148,4 +148,21 @@
 **Fix applied:** cleaned the imports + `macros` vars in both pages; `npm run build` green.
 
 ---
+
+### #11 — Taste preferences (the last vision piece)  ·  2026-07-22
+**Prompt (summary or verbatim):**
+> "Start work on the Taste Preferences thing, read all the files, make sure the existing working web app doesn't break. DON'T PUSH ANYTHING, do everything locally, make sure the taste preference thing is used where necessary in the features of the app and log everything."
+
+**Output achieved:** built end-to-end on `feat/taste-preferences` (4 commits, unpushed). `npm run build` green, `test:guardrail` **22/22**, `eval` still **236 → 100%/100%**.
+- **Data:** `favorite_cuisines` + `disliked_foods` (`text[]`) on `profiles` — migration `0001_taste_preferences.sql` (additive/idempotent, no new RLS), `schema.sql` + `types.ts` + `onboardingSchema` (`COMMON_CUISINES`).
+- **Security:** `screenPreferences` now injection-screens the taste free-text too (poisoned cuisine dropped + logged); prompt gets the screened prefs as DATA via `PromptPrefs`; soft rules 7–8 (lean toward cuisines / avoid dislikes) that **never override the hard allergen+diet rules — safety wins over taste**. Output guardrail unchanged.
+- **UI:** onboarding "Taste preferences (optional)" fieldset; Profile placeholder → live chips card. Reads guard `?? []` (won't break pre-migration).
+- **2nd surface:** dashboard snacks drop disliked snacks *after* the safety screen (never surfaces an unsafe snack; falls back if dislikes empty it).
+- **Tests:** +4 taste-injection checks in `guardrails.test.ts`.
+- **Verification:** couldn't log into local dev (no account creation/passwords) → rendered the real taste markup with sample data on a throwaway `/taste-preview` route, screenshotted the onboarding fieldset + Profile card, deleted the route + `.next`, rebuilt green.
+
+**Problems created:** (1) changed `safeSnacks`/`screenPreferences`/`buildPlanMessages` signatures — risk of stale callers. (2) taste columns don't exist in the live DB yet → onboarding SAVE would error until the migration runs.
+**Fix applied:** (1) grepped all callers, updated the dashboard call + route threading; the existing `screenPreferences` test still passes (subset destructure). (2) **left as a flagged pending user action** — reads are defensive so nothing else breaks; migration is the one non-local step (present it / offer the pooler). Nothing pushed per instruction.
+
+---
 *(Build prompts continue below as we go.)*
