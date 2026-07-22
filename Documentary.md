@@ -123,6 +123,17 @@ Alongside it, the numbers the brief actually asks for: a **budget meter** (spend
 
 **Learned / decided:** kept the eval **deterministic and offline** on purpose — it tests the guardrail, which is the thing that must be provably correct, not the LLM's mood on a given call. It runs with Node's native type-stripping (no test framework, no API key), so re-running the evidence costs nothing.
 
+### Design pass — turning the skeleton into a product
+**Intended:** the core was proven and provably safe, but it still *looked* like a functional prototype — and the evaluator weights design heavily. Reshape the signed-in app into something that reads as a real product, **without touching the guardrail** (the thing that must stay correct).
+
+**What happened:** working from a "Daily Meal"-style dashboard reference the user chose, the flat pages became a proper **app shell** — a collapsible sidebar (**Dashboard · Meal Plans · Security Console · Profile**) over an `(app)` route group that gates auth once — reskinned to a pastel palette with Aegis's **sage/coral as the accent** (sage = active nav + primary actions, coral = safety). The dashboard turned into a real landing: pastel stat cards, a calories line chart, a macro donut, a "meal for today" panel, and — the safety-first touch — **snack recommendations that run through the *same* deterministic guardrail as the meal plans** (a curated list, screened, so an allergen can't be recommended either). Meal Plans became **day-tabs** with a nutrition donut that follows the selected day. The Safety Dashboard — originally a dark terminal (Phase 4) — was **softened into a light, on-brand card**, and its raw event logs were rewritten as friendly *"here's what we caught for you"* cards: safety made legible, not scary. The landing hero got a per-character blur-in animation and one catchy line.
+
+**Trust stayed the spine.** Safety wasn't demoted for looks — it *gained* a dedicated **Security Console** destination, a persistent "guardrail active" strip on the dashboard, and a second proving surface (screened snacks). The one deterministic thing about the product got *more* visible, not less.
+
+**Verified, not assumed:** built on `feat/dashboard-shell` in small, labelled commits, **verified live on a real signed-in account** (day-tab switching updates the donut, the sidebar collapse persists, the hero animates), and **every merge gated on `build` + `test:guardrail` 18/18 + `eval` 100%/100%** — the guardrail source was never edited, and the number proves the safety claim survived the redesign untouched. Then merged to `main` and shipped to Vercel.
+
+**Learned / decided:** iterated the design against **real user feedback** (two rounds of pointed screenshots) rather than guessing — a dead search bar removed, headings strengthened, the cramped 7-column grid replaced with day tabs, the console lightened, the logs humanized. Added exactly **one** dependency (`motion`, for the hero) and kept everything else on the existing stack. The direction is pinned as locked decision **D11**.
+
 ### Phase 6 — Docs & submission
 _pending_
 

@@ -6,11 +6,11 @@
 
 ## 📍 Current status
 - **Phase:** **Phases 3, 4, 5 COMPLETE** ✅ + **5 UX/safety fixes** from the user's live testing (see Session 6). Only **Phase 6 (docs/README + submission)** remains — after the user's design pass.
-- **Currently working on:** **Design pass on `feat/dashboard-shell` — shell built (Session 7b) + feedback round 1 done (Session 8).** App shell (Sidebar-only over an `(app)` route group; topbar removed), pastel **Dashboard** (stat cards, sage Calories chart, Report donut, Meal-for-today, guardrail-screened **snack recs**, safety strip), **day-tabs Meal Plans** (`WeekView`), light **Security Console** (humanized event cards), Profile. Accent: **sage = active nav + primary buttons, coral = safety/blocked**. `npm run build` green; **verified live on the user's cybergen account**. NOT pushed yet. **Next: taste preferences** (`profiles` migration + form + prompt) → push on user's go → Phase 6.
+- **Currently working on:** **DESIGN PASS PUSHED & LIVE (Session 11, 2026-07-22).** User authorized the push; merged `feat/dashboard-shell` → `main` (`--no-ff`, merge `b03bd1b`, 20 commits) and pushed `main` + the feature branch. Vercel auto-deploy triggered. Final gate before merge was green: `npm run build`, `test:guardrail` **18/18**, `eval` **100%/100%**. Ships: app shell (collapsible sidebar over an `(app)` route group; topbar/search removed), pastel Dashboard (stat cards, sage Calories chart, Report donut, Meal-for-today, guardrail-screened snacks, safety strip), day-tabs Meal Plans with a per-day nutrition donut, light Security Console + humanized events, animated `SoftBlurIn` landing hero + one-line copy, legibility pass. **Next: taste preferences** (`profiles` migration + form + prompt) → Phase 6 (README + submission).
 - **Currently-edited file:** none.
 - **Live URLs:** **https://aegis-zeta-six.vercel.app** — now deploying the FULL app (P3 guardrail + P4 dashboard/charts + USD + Session-6 fixes). Generation needs `GROQ_API_KEY` in Vercel (user says it's set). Confirm the Vercel build went green + spot-check live before relying on it.
 - **Blockers:** none.
-- **Git:** remote = `github.com/yarrbakr/Aegis`. `origin/main` = `7bc433a` (everything through Session 6). All feature branches pushed. Workflow: branch-per-feature, commit everything, ask before every push.
+- **Git:** remote = `github.com/yarrbakr/Aegis`. `origin/main` = `b03bd1b` (design pass merged + pushed). `feat/dashboard-shell` pushed. Workflow: branch-per-feature, commit everything, ask before every push. **New dep:** `motion` (^12, landing animation) — joins recharts on the locked-lib list.
 - **Eval number (for README):** `npm run eval` → **236 meals / 14 profiles → 100.0% catch rate, 100.0% specificity** (saved in `lib/eval/RESULTS.md`).
 
 ---
@@ -200,3 +200,10 @@
   - **Hero copy:** replaced the paragraph with "AI plans your week; a safety shield keeps your allergens off the menu."
 - **Note:** confirmed the landing `motion` animation works on Vercel in principle (motion is a prod dependency, lockfile committed, `next build` green, client-hydrated) — but it's unproven live until we push (all still local on `feat/dashboard-shell`).
 - **Next:** taste preferences on user's go; then push; Phase 6.
+
+### 2026-07-22 — Session 11: pushed the design pass live
+- **Attempted:** user said "push all of this and log everything."
+- **Result:** final gate green (`npm run build`, `test:guardrail` **18/18**, `eval` **236 meals → 100%/100%**). Merged `feat/dashboard-shell` → `main` with `--no-ff` (merge commit `b03bd1b`, 20 commits, 21 files, +1769/−339). Pushed `main` (`7b6c73c..b03bd1b`) → Vercel auto-deploy triggered; pushed `feat/dashboard-shell` as a new remote branch.
+- **Errors & fixes:** first `git merge … -F-` failed (`git merge` doesn't read the message from stdin like `git commit -F-`; `error: could not read file '-'`). The `git checkout main` before it had reverted the working tree to main's pre-design state (looked alarming but nothing was lost — the work was safe on the feature branch). Re-ran the merge with `-m` flags → success.
+- **Docs:** updated Memory.md (Current status → pushed/deploying; Git → `origin/main` = `b03bd1b`; noted `motion` on the locked-lib list) + Documentary.md (design-pass boundary). Prompt.md already current through #10.
+- **Next:** spot-check the live Vercel deploy is green; then taste preferences; then Phase 6 (README with the eval number + live link + Documentary/Prompt finalize → submission).
