@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -62,6 +62,20 @@ const NAV: NavItem[] = [
     ),
   },
 ];
+
+// Immediate click feedback: while the clicked nav link is navigating (the server
+// component fetches), show a small spinner on that tab so it never feels stuck.
+// Must render inside a <Link> — useLinkStatus reads the nearest link's state.
+function NavSpinner() {
+  const { pending } = useLinkStatus();
+  if (!pending) return null;
+  return (
+    <span
+      className="ml-auto h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent opacity-70"
+      aria-hidden="true"
+    />
+  );
+}
 
 function initials(name: string): string {
   return name
@@ -168,6 +182,7 @@ export function Sidebar({
             >
               <span className="shrink-0">{item.icon}</span>
               <span className={labelCls}>{item.label}</span>
+              <NavSpinner />
             </Link>
           );
         })}

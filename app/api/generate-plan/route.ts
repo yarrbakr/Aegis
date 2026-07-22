@@ -59,6 +59,11 @@ const MAX_REGEN_PER_PLAN = 12;
 const MAX_DISLIKE_REROLL_PER_MEAL = 2;
 const MAX_DISLIKE_REROLL_PER_PLAN = 6;
 
+// A single replacement meal needs only a fraction of a full plan's output. Cap it
+// low so single-meal calls don't reserve the full budget against a provider's
+// per-day token limit (Groq counts prompt + requested max_tokens up front).
+const SINGLE_MEAL_MAX_TOKENS = 2000;
+
 // ── Validation helpers ──────────────────────────────────────────────────────
 
 type ValidateResult =
@@ -128,7 +133,7 @@ async function regenerateMeal(
     leakedAllergen,
     promptPrefs,
   );
-  const raw = await chatJSON(messages);
+  const raw = await chatJSON(messages, { maxTokens: SINGLE_MEAL_MAX_TOKENS });
   const meal = validateMeal(raw);
   if (!meal) return null;
   // Pin the slot — the model can drift on day/type; the grid needs it exact.
@@ -262,7 +267,7 @@ async function regenerateForDislike(
   promptPrefs: PromptPrefs,
 ): Promise<GeneratedMeal | null> {
   const messages = buildDislikeRegenMessages(profile, slot, dislikedTerm, promptPrefs);
-  const raw = await chatJSON(messages);
+  const raw = await chatJSON(messages, { maxTokens: SINGLE_MEAL_MAX_TOKENS });
   const meal = validateMeal(raw);
   if (!meal) return null;
   return { ...meal, day_of_week: slot.day_of_week, meal_type: slot.meal_type };
@@ -381,9 +386,17 @@ export async function POST() {
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
     console.error("[generate-plan] generation failed:", detail);
+    // A provider rate limit (e.g. Groq's free daily token cap) isn't a bug — tell
+    // the user it's busy, not broken, and return 429 rather than a scary 502.
+    const rateLimited =
+      (err instanceof LLMError && err.status === 429) || /rate.?limit|\b429\b/i.test(detail);
     return NextResponse.json(
-      { error: "Couldn't generate a plan right now. Please try again." },
-      { status: 502 },
+      {
+        error: rateLimited
+          ? "Aegis is at capacity right now (the meal service hit its usage limit). Please try again in a little while."
+          : "Couldn't generate a plan right now. Please try again.",
+      },
+      { status: rateLimited ? 429 : 502 },
     );
   }
 
