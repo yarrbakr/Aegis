@@ -148,4 +148,35 @@
 **Fix applied:** cleaned the imports + `macros` vars in both pages; `npm run build` green.
 
 ---
+
+### #11 — Taste preferences (the last vision piece)  ·  2026-07-22
+**Prompt (summary or verbatim):**
+> "Start work on the Taste Preferences thing, read all the files, make sure the existing working web app doesn't break. DON'T PUSH ANYTHING, do everything locally, make sure the taste preference thing is used where necessary in the features of the app and log everything."
+
+**Output achieved:** built end-to-end on `feat/taste-preferences` (4 commits, unpushed). `npm run build` green, `test:guardrail` **22/22**, `eval` still **236 → 100%/100%**.
+- **Data:** `favorite_cuisines` + `disliked_foods` (`text[]`) on `profiles` — migration `0001_taste_preferences.sql` (additive/idempotent, no new RLS), `schema.sql` + `types.ts` + `onboardingSchema` (`COMMON_CUISINES`).
+- **Security:** `screenPreferences` now injection-screens the taste free-text too (poisoned cuisine dropped + logged); prompt gets the screened prefs as DATA via `PromptPrefs`; soft rules 7–8 (lean toward cuisines / avoid dislikes) that **never override the hard allergen+diet rules — safety wins over taste**. Output guardrail unchanged.
+- **UI:** onboarding "Taste preferences (optional)" fieldset; Profile placeholder → live chips card. Reads guard `?? []` (won't break pre-migration).
+- **2nd surface:** dashboard snacks drop disliked snacks *after* the safety screen (never surfaces an unsafe snack; falls back if dislikes empty it).
+- **Tests:** +4 taste-injection checks in `guardrails.test.ts`.
+- **Verification:** couldn't log into local dev (no account creation/passwords) → rendered the real taste markup with sample data on a throwaway `/taste-preview` route, screenshotted the onboarding fieldset + Profile card, deleted the route + `.next`, rebuilt green.
+
+**Problems created:** (1) changed `safeSnacks`/`screenPreferences`/`buildPlanMessages` signatures — risk of stale callers. (2) taste columns don't exist in the live DB yet → onboarding SAVE would error until the migration runs.
+**Fix applied:** (1) grepped all callers, updated the dashboard call + route threading; the existing `screenPreferences` test still passes (subset destructure). (2) **left as a flagged pending user action** — reads are defensive so nothing else breaks; migration is the one non-local step (present it / offer the pooler). Nothing pushed per instruction.
+
+---
+
+### #12 — Fix: disliked food still appeared in a plan  ·  2026-07-22
+**Prompt (verbatim):**
+> "i added mushrooms in the one that I disliked, but it still showed up" (with a screenshot of a "Grilled Portobello Mushrooms" meal card).
+
+**Output achieved:** made dislikes deterministic instead of trusting the model. All local, `npm run build` green, `test:guardrail` **27/27**, `eval` still **100%/100%**.
+- Root cause: dislikes were a soft prompt hint (rule 8) the model half-ignored (the meal's own description said "…replaced with grilled eggplant" while keeping the mushroom name). Data path was correct.
+- Fix: `lib/taste.ts` `findDislikedTerm` (deterministic, plural-forgiving) + a best-effort **TASTE PASS** in the route that re-rolls disliked meals on the RAW output **before** the allergen guardrail (bounded ≤2/meal, ≤6/plan; dedicated `buildDislikeRegenMessages`). Runs first so the guardrail is the authoritative last word and audit logs name the final meals. Snacks reuse the shared matcher. +5 taste tests.
+- **Safety:** guardrail + eval untouched; any allergen a taste re-roll introduces is still caught. Safety is never traded for taste.
+
+**Problems created:** first wiring put the taste pass AFTER the safety pass (would make `safety_events` name the pre-swap meal — the Session-6 log/card-mismatch class) and I mangled the try/catch block mid-edit.
+**Fix applied:** reordered to taste→safety (raw meals first); rewrote the block cleanly; renumbered the step comments; re-ran build/tests/eval green.
+
+---
 *(Build prompts continue below as we go.)*

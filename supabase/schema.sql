@@ -7,15 +7,19 @@ create extension if not exists "pgcrypto";  -- gen_random_uuid()
 
 -- 1) profiles — one row per authenticated user
 create table if not exists public.profiles (
-  id            uuid primary key references auth.users(id) on delete cascade,
-  display_name  text,
-  diet_type     text        not null default 'omnivore',   -- omnivore | vegetarian | vegan | keto | ...
-  allergens     text[]      not null default '{}',          -- the user's declared allergens
-  weekly_budget numeric(10,2),
-  num_people    int         not null default 1,
-  created_at    timestamptz not null default now(),
-  updated_at    timestamptz not null default now()
+  id                uuid primary key references auth.users(id) on delete cascade,
+  display_name      text,
+  diet_type         text        not null default 'omnivore',   -- omnivore | vegetarian | vegan | keto | ...
+  allergens         text[]      not null default '{}',          -- the user's declared allergens (ENFORCED by the guardrail)
+  favorite_cuisines text[]      not null default '{}',          -- taste hint only (best-effort, NOT a safety constraint)
+  disliked_foods    text[]      not null default '{}',          -- taste hint only (best-effort, NOT a safety constraint)
+  weekly_budget     numeric(10,2),
+  num_people        int         not null default 1,
+  created_at        timestamptz not null default now(),
+  updated_at        timestamptz not null default now()
 );
+-- NB: if this table already exists from an earlier run, `create table if not
+-- exists` will NOT add the taste columns — run supabase/migrations/0001_taste_preferences.sql.
 
 -- 2) meal_plans — a user has many plans
 create table if not exists public.meal_plans (

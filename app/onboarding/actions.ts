@@ -20,10 +20,30 @@ export async function saveProfile(formData: FormData) {
     .filter(Boolean);
   const allergens = Array.from(new Set([...checked, ...custom]));
 
+  // Taste prefs: checkbox cuisines + free-text extras; dislikes are free-text.
+  const checkedCuisines = formData.getAll("favorite_cuisines").map((c) => String(c));
+  const customCuisines = String(formData.get("custom_cuisines") ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const favorite_cuisines = Array.from(
+    new Set([...checkedCuisines, ...customCuisines]),
+  );
+  const disliked_foods = Array.from(
+    new Set(
+      String(formData.get("disliked_foods") ?? "")
+        .split(",")
+        .map((s) => s.trim().toLowerCase())
+        .filter(Boolean),
+    ),
+  );
+
   const parsed = onboardingSchema.safeParse({
     display_name: formData.get("display_name"),
     diet_type: formData.get("diet_type"),
     allergens,
+    favorite_cuisines,
+    disliked_foods,
     weekly_budget: formData.get("weekly_budget"),
     num_people: formData.get("num_people"),
   });
@@ -40,6 +60,8 @@ export async function saveProfile(formData: FormData) {
       display_name: v.display_name,
       diet_type: v.diet_type,
       allergens: v.allergens,
+      favorite_cuisines: v.favorite_cuisines,
+      disliked_foods: v.disliked_foods,
       weekly_budget: v.weekly_budget,
       num_people: v.num_people,
     })

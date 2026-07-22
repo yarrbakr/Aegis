@@ -6,6 +6,10 @@ export type Profile = {
   display_name: string | null;
   diet_type: DietType;
   allergens: string[];
+  // Taste preferences — best-effort hints fed to the model as data. NOT safety
+  // constraints (only `allergens` is enforced by the deterministic guardrail).
+  favorite_cuisines: string[];
+  disliked_foods: string[];
   weekly_budget: number | null;
   num_people: number;
   created_at: string;

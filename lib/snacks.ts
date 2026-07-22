@@ -6,6 +6,7 @@
 // keep on a second surface, with zero extra model calls.
 
 import { screenMeal, type ScreenableMeal } from "@/lib/guardrails/allergen";
+import { findDislikedTerm } from "@/lib/taste";
 
 export type Snack = {
   name: string;
@@ -123,11 +124,23 @@ const SNACKS: Snack[] = [
   },
 ];
 
+// A snack is "disliked" if any disliked term appears in its name or ingredients.
+// Taste-only filtering (shared matcher) — applied AFTER the safety screen, so it
+// can never let an unsafe snack through, only hide a safe-but-unwanted one.
+function isDisliked(snack: Snack, dislikes: string[]): boolean {
+  return findDislikedTerm(snack, dislikes) !== null;
+}
+
 /**
  * Safe snacks for a user — every returned snack has passed the deterministic
- * guardrail against `allergens`. Deterministic and pure (same engine as meals).
+ * guardrail against `allergens` (safety), then disliked snacks are dropped as a
+ * best-effort taste filter. Deterministic and pure (same engine as meals).
  */
-export function safeSnacks(allergens: string[], limit = 4): Snack[] {
+export function safeSnacks(
+  allergens: string[],
+  dislikes: string[] = [],
+  limit = 4,
+): Snack[] {
   const safe = SNACKS.filter((s) => {
     const meal: ScreenableMeal = {
       name: s.name,
@@ -136,5 +149,8 @@ export function safeSnacks(allergens: string[], limit = 4): Snack[] {
     };
     return screenMeal(meal, allergens).safe;
   });
-  return safe.slice(0, limit);
+  const liked = safe.filter((s) => !isDisliked(s, dislikes));
+  // If dislikes wiped out everything, fall back to the safe set — never show an
+  // empty panel over a taste preference (safety already guaranteed above).
+  return (liked.length > 0 ? liked : safe).slice(0, limit);
 }

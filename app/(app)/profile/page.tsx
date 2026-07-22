@@ -5,8 +5,8 @@ import { usd } from "@/lib/format";
 import type { Profile } from "@/lib/types";
 
 // "Profile" nav destination — the user's preferences at a glance, with an edit
-// link into the preferences form. Taste preferences (cuisines / dislikes) land
-// here next, once their DB columns exist.
+// link into the preferences form. Shows declared allergens (safety-enforced) and
+// taste preferences (cuisines / dislikes — best-effort hints, not enforced).
 export default async function ProfilePage() {
   const supabase = await createClient();
   const {
@@ -21,6 +21,10 @@ export default async function ProfilePage() {
     .maybeSingle();
   const profile = data as Profile | null;
   if (!profile) redirect("/onboarding");
+
+  // Defensive: taste columns may be absent until the migration runs.
+  const favoriteCuisines = profile.favorite_cuisines ?? [];
+  const dislikedFoods = profile.disliked_foods ?? [];
 
   const rows: { label: string; value: React.ReactNode }[] = [
     { label: "Name", value: profile.display_name || "—" },
@@ -91,22 +95,58 @@ export default async function ProfilePage() {
         </div>
       </div>
 
-      <div className="mt-4 rounded-2xl border border-dashed border-[#D8E2DB] bg-[#F6FAF7] p-5">
+      <div className="mt-4 rounded-2xl border border-[#D8E2DB] bg-[#F6FAF7] p-5">
         <div className="flex items-center gap-2">
           <span className="text-[#3B6149]">🍽️</span>
           <h2 className="text-sm font-semibold text-[#1F2933]">
             Taste preferences
           </h2>
-          <span className="rounded-full bg-[#EAF1EC] px-2 py-0.5 text-[10px] font-semibold text-[#3B6149]">
-            next up
-          </span>
         </div>
         <p className="mt-2 text-sm text-[#6B7280]">
-          Soon you&apos;ll be able to add favorite cuisines and foods to skip by
-          choice — used to tailor your plan. Note: dislikes are best-effort taste
-          hints; only your declared <strong>allergens</strong> are enforced by the
-          safety guardrail.
+          Used to tailor your plan. Best-effort taste hints — only your declared{" "}
+          <strong>allergens</strong> are enforced by the safety guardrail.
         </p>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-[0.04em] text-[#6B7280]">
+              Favorite cuisines
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {favoriteCuisines.length ? (
+                favoriteCuisines.map((c) => (
+                  <span
+                    key={c}
+                    className="rounded-full bg-[#EAF1EC] px-2.5 py-0.5 text-xs font-medium capitalize text-[#3B6149]"
+                  >
+                    {c}
+                  </span>
+                ))
+              ) : (
+                <span className="text-sm text-[#9CA3AF]">no preference set</span>
+              )}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-[0.04em] text-[#6B7280]">
+              Foods to skip by choice
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {dislikedFoods.length ? (
+                dislikedFoods.map((f) => (
+                  <span
+                    key={f}
+                    className="rounded-full bg-[#FCEFE2] px-2.5 py-0.5 text-xs font-medium capitalize text-[#B45309]"
+                  >
+                    {f}
+                  </span>
+                ))
+              ) : (
+                <span className="text-sm text-[#9CA3AF]">none set</span>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
       <p className="mt-8 text-xs text-[#9CA3AF]">
