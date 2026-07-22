@@ -56,7 +56,8 @@
 - **Stretch (only if ahead):** deploy `/backend` FastAPI to Render as a live evidence endpoint; single-meal regenerate button; RAG.
 
 ## 🐞 Open bugs / issues
-- none yet.
+- **Groq free-tier daily token cap (100k TPD) — needs a user action, NOT a code bug.** Live `/api/generate-plan` 502'd because the day's testing exhausted the cap (verified: Groq 429 "Used 95530 / Limit 100000"). Groq key + model are valid (trivial call → 200). Resets daily. **Fixes:** (a) wait for reset / upgrade Groq to Dev tier; (b) **activate the Mistral fallback** — set `MISTRAL_API_KEY` in `.env.local` + Vercel (code already supports it; that's the answer to "what happened to the Mistral fallback" — it was never keyed). Mitigations shipped in Session 13: single-meal calls now cap `max_tokens` at 2000 (was 8000) to stretch the daily budget, and a 429 now shows a friendly "at capacity" message instead of a generic 502.
+- **Also confirm the live Vercel `GROQ_API_KEY`** matches the current working key (rotate parity) when re-testing after reset.
 
 ---
 
@@ -236,3 +237,14 @@
 - **Result:** ✅ shipped. Final gate green (`build`, `test:guardrail` **27/27**, `eval` **236 → 100%/100%**). Added the Documentary "Taste preferences" narrative (`301f39f`). Merged `feat/taste-preferences` → `main` (`--no-ff`, merge **`79b1d8a`**, 7 commits, 17 files, +599/−71). Pushed `main` (`6d58469..79b1d8a`) + the feature branch. Vercel auto-deploy triggered. Everything logged (Memory 12/12b/12c, Prompt #11/#12, Documentary).
 - **Errors:** none.
 - **Next:** **Phase 6 — the "few minor things":** README (stack/data-model + locked decisions + the eval number **236 → 100%/100%** + live link + "built with Claude Code"), finalize Documentary "What I'd do next", final live spot-check from a fresh browser, submission email. Spot-check this deploy went green first.
+
+### 2026-07-22 — Session 13: 3 post-ship issues from live testing (loading, 502, Mistral)
+- **Attempted:** user tested a new account on live and reported: (1) generate → 502 ("Couldn't generate…", `api/generate-plan` 502 in devtools); (2) navigation/clicks feel stuck — wants a loading indicator; (3) "what happened to the Mistral fallback?"
+- **Diagnosis (evidence-based):** tested Groq directly with the local key → trivial call **200** (key + model `llama-3.3-70b-versatile` valid); full 21-meal call → **429**: "tokens per day (TPD): Limit 100000, Used 95530". So the 502 was the **Groq free-tier daily token cap**, exhausted by the day's testing — not a bug. The Mistral fallback exists + is correct in `lib/llm/groq.ts` but was **never keyed** (no `MISTRAL_API_KEY` anywhere), so nothing caught Groq's 429.
+- **Result (built + verified locally, `build`/`27-27`/`100%-100%` green):**
+  - **#2 loading:** `app/(app)/loading.tsx` skeleton (sidebar persists, content swaps) + `useLinkStatus` spinner on the clicked sidebar tab. Skeleton visually verified via throwaway `/loading-preview` (screenshotted, deleted).
+  - **#1 message:** 429 now returns a friendly "at capacity, try again shortly" (429) instead of a scary 502.
+  - **#1 efficiency:** single-meal calls (allergen regen + dislike re-roll) cap `max_tokens` at **2000** (was 8000) — Groq reserves prompt+max_tokens against the daily cap up front, so this stretches the free-tier budget.
+  - **#3 answer:** fallback is real but unkeyed → recommend the user set `MISTRAL_API_KEY` (free) in `.env.local` + Vercel to activate it (the proper resilience fix for #1 too).
+- **Committed (unpushed) on `fix/loading-and-llm-ux`:** `d06e2ff`. **Push NOT yet authorized for this branch** — ask.
+- **Next:** ask to push/merge `fix/loading-and-llm-ux`; user action on Groq (reset/upgrade) + optional `MISTRAL_API_KEY`; then Phase 6.

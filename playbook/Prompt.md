@@ -179,4 +179,19 @@
 **Fix applied:** reordered to taste→safety (raw meals first); rewrote the block cleanly; renumbered the step comments; re-ran build/tests/eval green.
 
 ---
+
+### #13 — Post-ship: loading states + 502 diagnosis + Mistral answer  ·  2026-07-22
+**Prompt (summary):**
+> New-account live test surfaced 3 things: (1) generate → 502 (`api/generate-plan` 502 in devtools); (2) navigation/clicks feel stuck — add a loading animation; (3) "what happened to the Mistral fallback?"
+
+**Output achieved:** diagnosed with evidence, fixed what's in-code, `build`/`27-27`/`100%-100%` green.
+- **Diagnosis:** probed Groq with the local key → trivial call 200 (key/model fine); full 21-meal call → **429 daily token cap** (Limit 100000, Used 95530). The 502 was Groq's free-tier TPD limit, not a bug. Mistral fallback exists in code but was never keyed.
+- **#2:** `app/(app)/loading.tsx` skeleton (sidebar persists) + `useLinkStatus` spinner on the clicked tab. Verified the skeleton via throwaway `/loading-preview` (screenshot, deleted).
+- **#1:** 429 → friendly "at capacity" message (429, not 502); single-meal calls capped at `max_tokens` 2000 (was 8000) to ease the daily cap.
+- **#3:** answered — fallback is real, just needs `MISTRAL_API_KEY` set to activate.
+
+**Problems created:** `useLinkStatus` is a newer `next/link` export — risk it wasn't available in this Next version.
+**Fix applied:** it is (Next 16); build compiled clean. Left the Groq-cap + Mistral-key items as flagged user actions (can't set their secrets/env).
+
+---
 *(Build prompts continue below as we go.)*
