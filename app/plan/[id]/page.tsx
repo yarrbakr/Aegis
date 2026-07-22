@@ -11,7 +11,6 @@ import { usd, usdApprox } from "@/lib/format";
 import {
   dailyCosts,
   weeklyMacros,
-  safetyStats,
   type SafetyEventRow,
 } from "@/lib/plan-stats";
 import type { MealPlan, MealWithIngredients, Profile } from "@/lib/types";
@@ -67,7 +66,22 @@ export default async function PlanPage({
   const overBudget = budget != null && totalCost > budget;
   const allergens = profile?.allergens ?? [];
 
-  const stats = safetyStats(events);
+  // Metrics from the authoritative meals table (safety_status), so "served" and
+  // "regenerated" can never contradict each other. Injections come from the log.
+  const served = meals.length;
+  const regenerated = meals.filter(
+    (m) => m.safety_status === "blocked_regenerated",
+  ).length;
+  const injections = events.filter(
+    (e) => e.event_type === "injection_detected",
+  ).length;
+  const safetySubtitle =
+    regenerated > 0
+      ? `All ${served} meals below are allergen-safe. ${regenerated} unsafe suggestion${
+          regenerated === 1 ? " was" : "s were"
+        } caught and regenerated before serving.`
+      : `All ${served} meals below passed a deterministic allergen check before they were saved.`;
+
   const costs = dailyCosts(meals);
   const macros = weeklyMacros(meals);
   const dailyBudget = budget != null ? Number((budget / 7).toFixed(2)) : null;
@@ -119,10 +133,10 @@ export default async function PlanPage({
             <div className="mb-6">
               <SafetyDashboard
                 title="This plan was screened for your allergens"
-                subtitle="Every meal below passed a deterministic allergen check before it was saved."
-                served={meals.length}
-                blocked={stats.blocked}
-                injections={stats.injections}
+                subtitle={safetySubtitle}
+                served={served}
+                regenerated={regenerated}
+                injections={injections}
                 allergensWatched={allergens}
                 events={events}
               />
